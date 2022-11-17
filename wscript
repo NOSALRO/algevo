@@ -76,6 +76,14 @@ def build(bld):
                 cxxflags = cxxflags,
                 target = 'sphere')
 
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'src/examples/sphere_map_elites.cpp',
+                includes = './src',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'sphere_map_elites')
+
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
         for filename in fnmatch.filter(filenames, '*.hpp'):

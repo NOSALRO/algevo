@@ -1,8 +1,6 @@
 #ifndef ALGEVO_ALGO_PSO_HPP
 #define ALGEVO_ALGO_PSO_HPP
 
-#include <iostream>
-
 #include <Eigen/Core>
 
 #include <array>
@@ -16,7 +14,7 @@ namespace algevo {
         template <typename Params, typename Fit, typename Scalar = double>
         class ParticleSwarmOptimization {
         public:
-            // This is allocating too much stack memory
+            // This is allocating too much stack memory, also no actual performance gain
             // using population_t = Eigen::Matrix<Scalar, Params::pop_size, Params::dim>;
             // using fit_t = Eigen::Matrix<Scalar, Params::pop_size, 1>;
             // using neighborhoods_t = Eigen::Matrix<Scalar, Params::num_neighborhoods, Params::dim>;
@@ -40,14 +38,12 @@ namespace algevo {
                 static_assert(Params::num_neighbors <= Params::pop_size, "Neighbor size needs to be smaller than population!");
                 _allocate_data();
 
-                // for (unsigned int i = 0; i < Params::pop_size; i++) {
-                //     for (unsigned int j = 0; j < Params::dim; j++) {
-                tools::parallel_loop(0, Params::pop_size * Params::dim, [this](size_t k) {
-                    size_t i = k / Params::dim;
-                    size_t j = k % Params::dim;
-                    _population(i, j) = _rgen.rand();
-                    _velocities(i, j) = _rgen_vel.rand();
-                });
+                for (unsigned int i = 0; i < Params::pop_size; i++) {
+                    for (unsigned int j = 0; j < Params::dim; j++) {
+                        _population(i, j) = _rgen.rand();
+                        _velocities(i, j) = _rgen_vel.rand();
+                    }
+                }
 
                 _fit_best_local = fit_t::Constant(Params::pop_size, -std::numeric_limits<Scalar>::max());
                 _fit_best_neighbor = neighborhood_fit_t::Constant(Params::num_neighborhoods, -std::numeric_limits<Scalar>::max());
