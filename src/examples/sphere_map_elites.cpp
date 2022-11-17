@@ -6,7 +6,6 @@ struct Params {
     static constexpr int seed = -1;
     static constexpr unsigned int dim = 100;
     static constexpr unsigned int dim_features = dim;
-    static constexpr unsigned int num_cells = 1000;
     static constexpr unsigned int batch_size = dim;
     static constexpr double max_value = 10.;
     static constexpr double min_value = -10.;
@@ -18,6 +17,7 @@ struct Params {
     static constexpr double sigma_2 = 0.2;
     static constexpr bool grid = false;
     static constexpr unsigned int grid_size = 10;
+    static constexpr unsigned int num_cells = grid ? grid_size * grid_size : 1000;
 };
 
 template <typename Params, typename Scalar = double>
