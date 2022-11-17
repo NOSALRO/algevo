@@ -5,8 +5,8 @@
 struct Params {
     static constexpr int seed = -1;
     static constexpr unsigned int dim = 100;
-    static constexpr unsigned int pop_size = 1000;
-    static constexpr unsigned int num_neighbors = 50;
+    static constexpr unsigned int pop_size = 100;
+    static constexpr unsigned int num_neighbors = 10;
     static constexpr unsigned int num_neighborhoods = std::ceil(pop_size / num_neighbors);
     static constexpr double max_value = 10.;
     static constexpr double min_value = -10.;
