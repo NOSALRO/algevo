@@ -3,12 +3,12 @@
 #include <algevo/algo/pso.hpp>
 
 struct Params {
-    static constexpr unsigned int dim = 2;
+    static constexpr unsigned int dim = 10;
     static constexpr unsigned int pop_size = 50;
-    static constexpr unsigned int num_neighbors = 2;
+    static constexpr unsigned int num_neighbors = 5;
     static constexpr unsigned int num_neighborhoods = std::ceil(pop_size / num_neighbors);
-    static constexpr double max_value = 1.;
-    static constexpr double min_value = -1.;
+    static constexpr double max_value = 10.;
+    static constexpr double min_value = -10.;
     static constexpr double max_vel = 1.;
     static constexpr double min_vel = -1.;
 
@@ -32,9 +32,9 @@ int main()
 {
     algevo::algo::ParticleSwarmOptimization<Params, FitSphere<Params>> pso;
 
-    for (unsigned int i = 0; i < 1000; i++) {
+    for (unsigned int i = 0; i < 2000; i++) {
         pso.step();
-        std::cout << i << ": " << pso.best() << std::endl;
+        std::cout << i << ": " << pso.best_value() << std::endl;
     }
     return 0;
 }
