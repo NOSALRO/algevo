@@ -58,6 +58,14 @@ namespace algevo {
             {
                 _allocate_data();
 
+                // Initialize random archive
+                for (unsigned int i = 0; i < Params::num_cells; i++) {
+                    for (unsigned int j = 0; j < Params::dim; j++) {
+                        _archive(i, j) = _rgen.rand();
+                    }
+                }
+
+                // Initialize centroids
                 if (Params::grid) {
                     // TO-DO: Allow for bigger grids
                     static_assert((Params::grid && Params::dim_features == 2) || !Params::grid, "Too big of a grid!");
@@ -67,18 +75,11 @@ namespace algevo {
                             _centroids(i * Params::grid_size + j, 1) = static_cast<Scalar>(j) / Params::grid_size;
                         }
                 }
-
-                // Initialize random archive
-                for (unsigned int i = 0; i < Params::num_cells; i++) {
-                    for (unsigned int j = 0; j < Params::dim; j++) {
-                        _archive(i, j) = _rgen.rand();
-                    }
-                }
-
-                // Initialize random centroids
-                for (unsigned int i = 0; i < Params::num_cells; i++) {
-                    for (unsigned int j = 0; j < Params::dim_features; j++) {
-                        _centroids(i, j) = _rgen_features.rand();
+                else {
+                    for (unsigned int i = 0; i < Params::num_cells; i++) {
+                        for (unsigned int j = 0; j < Params::dim_features; j++) {
+                            _centroids(i, j) = _rgen_features.rand();
+                        }
                     }
                 }
             }
