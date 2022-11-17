@@ -178,7 +178,14 @@ namespace algevo {
                     }
                 }
 
+                // Clamp velocities inside min/max
+                _velocities.row(i).cwiseMin(Params::max_vel).cwiseMax(Params::min_vel);
+
+                // Update population
                 _population.row(i) += _velocities.row(i);
+
+                // Clamp inside min/max
+                _population.row(i).cwiseMin(Params::max_value).cwiseMax(Params::min_value);
             }
         };
     } // namespace algo
