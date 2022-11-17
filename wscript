@@ -70,11 +70,11 @@ def build(bld):
 
     bld.program(features = 'cxx',
                 install_path = None,
-                source = 'src/examples/rastrigin.cpp',
+                source = 'src/examples/sphere.cpp',
                 includes = './src',
                 uselib = libs,
                 cxxflags = cxxflags,
-                target = 'rastrigin')
+                target = 'sphere')
 
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
