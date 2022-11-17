@@ -152,7 +152,7 @@ namespace algevo {
             void _update_particle(unsigned int i)
             {
                 static thread_local rgen_scalar_t rgen(static_cast<Scalar>(0.), static_cast<Scalar>(1.), Params::seed);
-                // static thread_local rgen_scalar_gauss_t rgen_gauss(Params::mu_noise, Params::sigma_noise, Params::seed);
+                static thread_local rgen_scalar_gauss_t rgen_gauss(Params::mu_noise, Params::sigma_noise, Params::seed);
                 static Scalar zero = static_cast<Scalar>(0.);
 
                 static constexpr Scalar chi = Params::chi;
@@ -175,14 +175,12 @@ namespace algevo {
                 else // if (one_minus_u > zero) // LPSO
                     _velocities.row(i) = chi * (_velocities.row(i) + c1 * r1 * (_best_local.row(i) - _population.row(i)) + c2 * r2 * (_best - _population.row(i)));
 
-                // // Add noise if wanted
-                // if (Params::noisy_velocity) {
-                //     tools::parallel_loop(0, Params::pop_size * Params::dim, [this](size_t k) {
-                //         size_t i = k / Params::dim;
-                //         size_t j = k % Params::dim;
-                //         _velocities(i, j) += rgen_gauss.rand();
-                //     });
-                // }
+                // Add noise if wanted, helps to get away from local minima
+                if (Params::noisy_velocity) {
+                    for (unsigned int j = 0; j < Params::dim; j++) {
+                        _velocities(i, j) += rgen_gauss.rand();
+                    }
+                }
 
                 _population.row(i) += _velocities.row(i);
             }
