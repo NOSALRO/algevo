@@ -16,19 +16,30 @@ namespace algevo {
         template <typename Params, typename Fit, typename Scalar = double>
         class ParticleSwarmOptimization {
         public:
-            using population_t = Eigen::Matrix<Scalar, Params::pop_size, Params::dim>;
-            using fit_t = Eigen::Matrix<Scalar, Params::pop_size, 1>;
-            using neighborhoods_t = Eigen::Matrix<Scalar, Params::num_neighborhoods, Params::dim>;
-            using neighborhood_fit_t = Eigen::Matrix<Scalar, Params::num_neighborhoods, 1>;
-            using x_t = Eigen::Matrix<Scalar, 1, Params::dim>;
+            // This is allocating too much stack memory
+            // using population_t = Eigen::Matrix<Scalar, Params::pop_size, Params::dim>;
+            // using fit_t = Eigen::Matrix<Scalar, Params::pop_size, 1>;
+            // using neighborhoods_t = Eigen::Matrix<Scalar, Params::num_neighborhoods, Params::dim>;
+            // using neighborhood_fit_t = Eigen::Matrix<Scalar, Params::num_neighborhoods, 1>;
+            // using x_t = Eigen::Matrix<Scalar, 1, Params::dim>;
+            using population_t = Eigen::Matrix<Scalar, -1, -1>;
+            using fit_t = Eigen::Matrix<Scalar, -1, 1>;
+            using neighborhoods_t = Eigen::Matrix<Scalar, -1, -1>;
+            using neighborhood_fit_t = Eigen::Matrix<Scalar, -1, 1>;
+            using x_t = Eigen::Matrix<Scalar, 1, -1>;
 
             using fit_eval_t = std::array<Fit, Params::pop_size>;
 
             using rdist_scalar_t = std::uniform_real_distribution<Scalar>;
             using rgen_scalar_t = tools::RandomGenerator<rdist_scalar_t>;
+            using rdist_scalar_gauss_t = std::normal_distribution<Scalar>;
+            using rgen_scalar_gauss_t = tools::RandomGenerator<rdist_scalar_gauss_t>;
 
             ParticleSwarmOptimization()
             {
+                static_assert(Params::num_neighbors <= Params::pop_size, "Neighbor size needs to be smaller than population!");
+                _allocate_data();
+
                 // for (unsigned int i = 0; i < Params::pop_size; i++) {
                 //     for (unsigned int j = 0; j < Params::dim; j++) {
                 tools::parallel_loop(0, Params::pop_size * Params::dim, [this](size_t k) {
@@ -38,8 +49,8 @@ namespace algevo {
                     _velocities(i, j) = _rgen_vel.rand();
                 });
 
-                _fit_best_local = fit_t::Constant(-std::numeric_limits<Scalar>::max());
-                _fit_best_neighbor = neighborhood_fit_t::Constant(-std::numeric_limits<Scalar>::max());
+                _fit_best_local = fit_t::Constant(Params::pop_size, -std::numeric_limits<Scalar>::max());
+                _fit_best_neighbor = neighborhood_fit_t::Constant(Params::num_neighborhoods, -std::numeric_limits<Scalar>::max());
 
                 _fit_best = -std::numeric_limits<Scalar>::max();
 
@@ -96,8 +107,22 @@ namespace algevo {
             fit_eval_t _fit_evals;
 
             // Random numbers
-            rgen_scalar_t _rgen = rgen_scalar_t(Params::min_value, Params::max_value);
-            rgen_scalar_t _rgen_vel = rgen_scalar_t(Params::min_vel, Params::max_vel);
+            rgen_scalar_t _rgen = rgen_scalar_t(Params::min_value, Params::max_value, Params::seed);
+            rgen_scalar_t _rgen_vel = rgen_scalar_t(Params::min_vel, Params::max_vel, Params::seed);
+
+            void _allocate_data()
+            {
+                _population = population_t(Params::pop_size, Params::dim);
+                _velocities = population_t(Params::pop_size, Params::dim);
+
+                _fit_best_local = fit_t(Params::pop_size);
+                _best_local = population_t(Params::pop_size, Params::dim);
+
+                _fit_best_neighbor = neighborhood_fit_t(Params::num_neighborhoods);
+                _best_neighbor = neighborhoods_t(Params::num_neighborhoods, Params::dim);
+
+                _best = x_t(Params::dim);
+            }
 
             void _evaluate_population()
             {
@@ -126,13 +151,15 @@ namespace algevo {
 
             void _update_particle(unsigned int i)
             {
-                static thread_local rgen_scalar_t rgen(0., 1.);
+                static thread_local rgen_scalar_t rgen(static_cast<Scalar>(0.), static_cast<Scalar>(1.), Params::seed);
+                // static thread_local rgen_scalar_gauss_t rgen_gauss(Params::mu_noise, Params::sigma_noise, Params::seed);
+                static Scalar zero = static_cast<Scalar>(0.);
 
-                Scalar chi = Params::chi;
-                Scalar c1 = Params::c1;
-                Scalar c2 = Params::c2;
-                Scalar u = Params::u;
-                Scalar one_minus_u = static_cast<Scalar>(1) - u;
+                static constexpr Scalar chi = Params::chi;
+                static constexpr Scalar c1 = Params::c1;
+                static constexpr Scalar c2 = Params::c2;
+                static constexpr Scalar u = Params::u;
+                static constexpr Scalar one_minus_u = static_cast<Scalar>(1.) - u;
 
                 Scalar r1 = rgen.rand();
                 Scalar r2 = rgen.rand();
@@ -140,7 +167,22 @@ namespace algevo {
                 Scalar r1p = rgen.rand();
                 Scalar r2p = rgen.rand();
 
-                _velocities.row(i) = u * chi * (_velocities.row(i) + c1 * r1 * (_best_local.row(i) - _population.row(i)) + c2 * r2 * (_best - _population.row(i))).array() + one_minus_u * chi * (_velocities.row(i) + c1 * r1p * (_best_local.row(i) - _population.row(i)) + c2 * r2p * (_best_neighbor.row(_neighborhood_ids[i]) - _population.row(i))).array();
+                // In theory, those checks should be able to be defined at compile time and thus use the optimized version
+                if (u > zero && one_minus_u > zero) // UPSO
+                    _velocities.row(i) = one_minus_u * chi * (_velocities.row(i) + c1 * r1 * (_best_local.row(i) - _population.row(i)) + c2 * r2 * (_best - _population.row(i))).array() + u * chi * (_velocities.row(i) + c1 * r1p * (_best_local.row(i) - _population.row(i)) + c2 * r2p * (_best_neighbor.row(_neighborhood_ids[i]) - _population.row(i))).array();
+                else if (u > zero) // GPSO
+                    _velocities.row(i) = chi * (_velocities.row(i) + c1 * r1p * (_best_local.row(i) - _population.row(i)) + c2 * r2p * (_best_neighbor.row(_neighborhood_ids[i]) - _population.row(i)));
+                else // if (one_minus_u > zero) // LPSO
+                    _velocities.row(i) = chi * (_velocities.row(i) + c1 * r1 * (_best_local.row(i) - _population.row(i)) + c2 * r2 * (_best - _population.row(i)));
+
+                // // Add noise if wanted
+                // if (Params::noisy_velocity) {
+                //     tools::parallel_loop(0, Params::pop_size * Params::dim, [this](size_t k) {
+                //         size_t i = k / Params::dim;
+                //         size_t j = k % Params::dim;
+                //         _velocities(i, j) += rgen_gauss.rand();
+                //     });
+                // }
 
                 _population.row(i) += _velocities.row(i);
             }
