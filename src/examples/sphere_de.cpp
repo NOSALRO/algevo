@@ -11,6 +11,7 @@ struct Params {
 
     static constexpr double cr = 0.9;
     static constexpr double f = 0.8;
+    static constexpr double lambda = f;
 };
 
 template <typename Params, typename Scalar = double>

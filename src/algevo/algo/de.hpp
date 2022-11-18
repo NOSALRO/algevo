@@ -122,6 +122,7 @@ namespace algevo {
 
                 static constexpr Scalar cr = Params::cr;
                 static constexpr Scalar f = Params::f;
+                static constexpr Scalar l = Params::lambda;
 
                 // DE/rand-to best/1
                 unsigned int i1 = rgen_pop.rand(), i2 = rgen_pop.rand(); //, i3 = rgen_pop.rand();
@@ -146,7 +147,7 @@ namespace algevo {
                     if (j == R || rgen.rand() < cr) {
                         // TO-DO: Maybe mutex is needed?
                         // y(j) = _population(i1, j) + f * (_population(i2, j) - _population(i3, j));
-                        y(j) = std::min(Params::max_value, std::max(Params::min_value, _population(i, j) + f * (_best(j) - _population(i, j)) + f * (_population(i1, j) - _population(i2, j))));
+                        y(j) = std::min(Params::max_value, std::max(Params::min_value, _population(i, j) + l * (_best(j) - _population(i, j)) + f * (_population(i1, j) - _population(i2, j))));
                     }
                 }
 
