@@ -5,7 +5,7 @@
 struct Params {
     static constexpr int seed = -1;
     static constexpr unsigned int dim = 100;
-    static constexpr unsigned int pop_size = 10 * dim;
+    static constexpr unsigned int pop_size = dim;
     static constexpr double max_value = 10.;
     static constexpr double min_value = -10.;
 
