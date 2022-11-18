@@ -146,7 +146,7 @@ namespace algevo {
                     if (j == R || rgen.rand() < cr) {
                         // TO-DO: Maybe mutex is needed?
                         // y(j) = _population(i1, j) + f * (_population(i2, j) - _population(i3, j));
-                        y(j) = _population(i, j) + f * (_best(j) - _population(i, j)) + f * (_population(i1, j) - _population(i2, j));
+                        y(j) = std::min(Params::max_value, std::max(Params::min_value, _population(i, j) + f * (_best(j) - _population(i, j)) + f * (_population(i1, j) - _population(i2, j))));
                     }
                 }
 
