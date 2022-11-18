@@ -1,12 +1,13 @@
 #include <iostream>
 
 #include <algevo/algo/map_elites.hpp>
+#include <algevo/tools/cvt.hpp>
 
 struct Params {
     static constexpr int seed = -1;
     static constexpr unsigned int dim = 100;
     static constexpr unsigned int dim_features = dim;
-    static constexpr unsigned int batch_size = dim;
+    static constexpr unsigned int batch_size = 256;
     static constexpr double max_value = 10.;
     static constexpr double min_value = -10.;
     // static constexpr double max_value = 1.;
@@ -17,7 +18,7 @@ struct Params {
     static constexpr double sigma_2 = 0.2;
     static constexpr bool grid = false;
     static constexpr unsigned int grid_size = 10;
-    static constexpr unsigned int num_cells = grid ? grid_size * grid_size : 1000;
+    static constexpr unsigned int num_cells = grid ? grid_size * grid_size : 20;
 };
 
 template <typename Params, typename Scalar = double>
@@ -37,6 +38,14 @@ struct FitSphere {
 int main()
 {
     algevo::algo::MapElites<Params, FitSphere<Params>> map_elites;
+
+    // Compute centroids via CVT
+    // It can take some while, if num_cells is big
+    unsigned int num_points = Params::num_cells * 100;
+    Eigen::MatrixXd data = (Eigen::MatrixXd::Random(num_points, Params::dim_features) + Eigen::MatrixXd::Constant(num_points, Params::dim_features, 1.)) / 2.;
+    algevo::tools::KMeans<> k(100, 1, 1e-4);
+    Eigen::MatrixXd centroids = k.cluster(data, Params::num_cells);
+    map_elites.centroids() = centroids;
 
     for (unsigned int i = 0; i < 2000; i++) {
         map_elites.step();
