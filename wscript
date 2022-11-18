@@ -70,11 +70,11 @@ def build(bld):
 
     bld.program(features = 'cxx',
                 install_path = None,
-                source = 'src/examples/sphere.cpp',
+                source = 'src/examples/sphere_pso.cpp',
                 includes = './src',
                 uselib = libs,
                 cxxflags = cxxflags,
-                target = 'sphere')
+                target = 'sphere_pso')
 
     bld.program(features = 'cxx',
                 install_path = None,

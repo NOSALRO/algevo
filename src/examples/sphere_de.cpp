@@ -2,31 +2,25 @@
 
 #include <algevo/algo/de.hpp>
 
+#include "problems.hpp"
+
+using FitSphere = algevo::FitSphere<>;
+
 struct Params {
     static constexpr int seed = -1;
-    static constexpr unsigned int dim = 100;
+    static constexpr unsigned int dim = FitSphere::dim;
     static constexpr unsigned int pop_size = dim;
-    static constexpr double max_value = 10.;
-    static constexpr double min_value = -10.;
+    static constexpr double max_value = FitSphere::max_value;
+    static constexpr double min_value = FitSphere::min_value;
 
     static constexpr double cr = 0.9;
     static constexpr double f = 0.8;
     static constexpr double lambda = f;
 };
 
-template <typename Params, typename Scalar = double>
-struct FitSphere {
-    using x_t = Eigen::Matrix<Scalar, 1, Params::dim>;
-
-    Scalar eval(const x_t& x)
-    {
-        return -x.squaredNorm();
-    }
-};
-
 int main()
 {
-    algevo::algo::DifferentialEvolution<Params, FitSphere<Params>> de;
+    algevo::algo::DifferentialEvolution<Params, FitSphere> de;
 
     for (unsigned int i = 0; i < 2000; i++) {
         de.step();

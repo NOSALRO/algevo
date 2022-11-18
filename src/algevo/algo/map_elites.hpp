@@ -126,7 +126,7 @@ namespace algevo {
                 tools::parallel_loop(0, Params::batch_size, [this](unsigned int i) {
                     // TO-DO: Check how to avoid copying here
                     x_t p(Params::dim_features);
-                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval(_batch.row(i));
+                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.row(i));
                     _batch_features.row(i) = p.cwiseMin(Params::max_features_value).cwiseMax(Params::min_features_value);
                 });
 
@@ -151,7 +151,7 @@ namespace algevo {
                             }
                         }
                     }
-                    if (_batch_fit.row(i)[0] > _archive_fit(best_i))
+                    if (_batch_fit(i) > _archive_fit(best_i))
                         _new_rank[i] = best_i;
                 });
 
@@ -186,7 +186,7 @@ namespace algevo {
             rgen_scalar_t _rgen = rgen_scalar_t(Params::min_value, Params::max_value, Params::seed);
             rgen_scalar_t _rgen_features = rgen_scalar_t(Params::min_features_value, Params::max_features_value, Params::seed);
             tools::rgen_int_t _rgen_ranks = tools::rgen_int_t(0, Params::num_cells - 1, Params::seed);
-            rgen_scalar_gauss_t _rgen_gauss = rgen_scalar_gauss_t(0., 1.);
+            rgen_scalar_gauss_t _rgen_gauss = rgen_scalar_gauss_t(static_cast<Scalar>(0.), static_cast<Scalar>(1.));
 
             void _allocate_data()
             {
