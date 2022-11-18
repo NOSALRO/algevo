@@ -56,18 +56,17 @@ namespace algevo {
                         n_id++;
                     _neighborhood_ids[i] = n_id;
                 }
-
-                _evaluate_population(); // initial evaluation of population
             }
 
             void step()
             {
+                // Evaluate population
+                _evaluate_population();
+
                 // Do updates
                 tools::parallel_loop(0, Params::pop_size, [this](size_t i) {
                     _update_particle(i);
                 });
-
-                _evaluate_population();
             }
 
             const population_t& population() const { return _population; }
