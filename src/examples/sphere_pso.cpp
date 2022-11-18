@@ -9,9 +9,9 @@ using FitSphere = algevo::FitSphere<>;
 struct Params {
     static constexpr int seed = -1;
     static constexpr unsigned int dim = FitSphere::dim;
-    static constexpr unsigned int pop_size = 100;
+    static constexpr unsigned int pop_size = (dim > 100) ? dim : 128;
     static constexpr unsigned int num_neighbors = 10;
-    static constexpr unsigned int num_neighborhoods = std::ceil(pop_size / num_neighbors);
+    static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
     static constexpr double max_value = FitSphere::max_value;
     static constexpr double min_value = FitSphere::min_value;
     static constexpr double max_vel = 1.;

@@ -54,7 +54,7 @@ namespace algevo {
                 for (unsigned int i = 0; i < Params::pop_size; i++) {
                     if ((i % Params::num_neighbors) == 0)
                         n_id++;
-                    _neighborhood_ids[i] = n_id;
+                    _neighborhood_ids[i] = std::min(n_id, static_cast<int>(Params::num_neighborhoods) - 1);
                 }
             }
 

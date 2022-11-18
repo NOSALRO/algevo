@@ -11,7 +11,7 @@ struct Params {
     static constexpr int seed = -1;
     static constexpr unsigned int dim = FitSphere::dim;
     static constexpr unsigned int dim_features = FitSphere::dim_features;
-    static constexpr unsigned int batch_size = dim;
+    static constexpr unsigned int batch_size = (dim > 100) ? dim : 128;
     static constexpr double max_value = FitSphere::max_value;
     static constexpr double min_value = FitSphere::min_value;
     static constexpr double max_features_value = FitSphere::max_features_value;

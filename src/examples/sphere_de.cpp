@@ -9,7 +9,7 @@ using FitSphere = algevo::FitSphere<>;
 struct Params {
     static constexpr int seed = -1;
     static constexpr unsigned int dim = FitSphere::dim;
-    static constexpr unsigned int pop_size = dim;
+    static constexpr unsigned int pop_size = (dim > 100) ? dim : 128;
     static constexpr double max_value = FitSphere::max_value;
     static constexpr double min_value = FitSphere::min_value;
 
