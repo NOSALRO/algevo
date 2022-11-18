@@ -45,9 +45,6 @@ namespace algevo {
                     }
                 }
 
-                _fit_best_local = fit_t::Constant(Params::pop_size, -std::numeric_limits<Scalar>::max());
-                _fit_best_neighbor = neighborhood_fit_t::Constant(Params::num_neighborhoods, -std::numeric_limits<Scalar>::max());
-
                 _fit_best = -std::numeric_limits<Scalar>::max();
 
                 int n_id = -1;
@@ -110,13 +107,14 @@ namespace algevo {
                 _population = population_t(Params::pop_size, Params::dim);
                 _velocities = population_t(Params::pop_size, Params::dim);
 
-                _fit_best_local = fit_t(Params::pop_size);
+                _fit_best_local = fit_t::Constant(Params::pop_size, -std::numeric_limits<Scalar>::max());
+
                 _best_local = population_t(Params::pop_size, Params::dim);
 
-                _fit_best_neighbor = neighborhood_fit_t(Params::num_neighborhoods);
+                _fit_best_neighbor = neighborhood_fit_t::Constant(Params::num_neighborhoods, -std::numeric_limits<Scalar>::max());
                 _best_neighbor = neighborhoods_t(Params::num_neighborhoods, Params::dim);
 
-                _best = x_t(Params::dim);
+                _best = x_t::Constant(Params::dim, -std::numeric_limits<Scalar>::max());
             }
 
             void _evaluate_population()
@@ -178,13 +176,17 @@ namespace algevo {
                 }
 
                 // Clamp velocities inside min/max
-                _velocities.row(i).cwiseMin(Params::max_vel).cwiseMax(Params::min_vel);
+                for (unsigned int j = 0; j < Params::dim; j++) {
+                    _velocities(i, j) = std::max(Params::min_vel, std::min(Params::max_vel, _velocities(i, j)));
+                }
 
                 // Update population
                 _population.row(i) += _velocities.row(i);
 
                 // Clamp inside min/max
-                _population.row(i).cwiseMin(Params::max_value).cwiseMax(Params::min_value);
+                for (unsigned int j = 0; j < Params::dim; j++) {
+                    _population(i, j) = std::max(Params::min_value, std::min(Params::max_value, _population(i, j)));
+                }
             }
         };
     } // namespace algo

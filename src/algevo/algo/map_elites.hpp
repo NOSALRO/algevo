@@ -116,18 +116,22 @@ namespace algevo {
 
                 // Gaussian mutation
                 for (unsigned int i = 0; i < Params::batch_size; i++)
-                    for (unsigned int j = 0; j < Params::dim; j++)
+                    for (unsigned int j = 0; j < Params::dim; j++) {
                         _batch(i, j) += _rgen_gauss.rand() * Params::sigma_1;
-                // clip in [min,max] -- TO-DO: Maybe do this inside the mutation, to remove extra loop
-                for (unsigned int i = 0; i < Params::batch_size; ++i)
-                    _batch.row(i) = _batch.row(i).cwiseMin(Params::max_value).cwiseMax(Params::min_value);
+                        // clip in [min,max]
+                        _batch(i, j) = std::max(Params::min_value, std::min(Params::max_value, _batch(i, j)));
+                    }
 
                 // evaluate the batch
                 tools::parallel_loop(0, Params::batch_size, [this](unsigned int i) {
                     // TO-DO: Check how to avoid copying here
                     x_t p(Params::dim_features);
                     std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.row(i));
-                    _batch_features.row(i) = p.cwiseMin(Params::max_features_value).cwiseMax(Params::min_features_value);
+                    // clip in [min,max]
+                    for (unsigned int j = 0; j < Params::dim; j++) {
+                        p(j) = std::max(Params::min_features_value, std::min(Params::max_features_value, p(j)));
+                    }
+                    _batch_features.row(i) = p;
                 });
 
                 // competition
