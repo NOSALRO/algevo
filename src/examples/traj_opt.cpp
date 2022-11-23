@@ -210,16 +210,10 @@ struct DoubleIntegrator {
                 // Gradient wrt to current state
                 if (i < (T - 1)) {
                     C(i * D + d, T + i * D + d) = -1.;
-                    // for (unsigned int k = 0; k < D; k++) {
-                    //     C(i * D + d, T + i * D + k) = -1.;
-                    // }
                 }
 
                 // Gradient wrt to previous state
                 if (i > 0) {
-                    // Vector tmp = A * x_init;
-                    // TO-DO: This is hackily
-                    // C(i * D + d, T + (i - 1) * D + d) = A(d, d);
                     for (unsigned int k = 0; k < D; k++) {
                         C(i * D + d, T + (i - 1) * D + k) = A(d, k);
                     }

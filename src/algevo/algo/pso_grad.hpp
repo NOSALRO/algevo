@@ -235,21 +235,24 @@ namespace algevo {
                     // _qp_population[i]->settings.initial_guess = proxsuite::proxqp::InitialGuessStatus::NO_INITIAL_GUESS;
                     if (_nfe > 0)
                         _qp_population[i]->settings.initial_guess = proxsuite::proxqp::InitialGuessStatus::WARM_START_WITH_PREVIOUS_RESULT;
-                    if (Params::neq_dim > 0 && Params::nin_dim > 0)
+                    if (Params::neq_dim > 0 && Params::nin_dim > 0) {
                         if (_nfe == 0)
                             _qp_population[i]->init(H, g, A, b, C, l, proxsuite::nullopt);
                         else
                             _qp_population[i]->update(H, g, A, b, C, l, proxsuite::nullopt);
-                    else if (Params::neq_dim > 0)
+                    }
+                    else if (Params::neq_dim > 0) {
                         if (_nfe == 0)
                             _qp_population[i]->init(H, g, A, b, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt);
                         else
                             _qp_population[i]->update(H, g, A, b, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt);
-                    else if (Params::nin_dim > 0)
+                    }
+                    else if (Params::nin_dim > 0) {
                         if (_nfe == 0)
                             _qp_population[i]->init(H, g, proxsuite::nullopt, proxsuite::nullopt, C, l, proxsuite::nullopt);
                         else
                             _qp_population[i]->update(H, g, proxsuite::nullopt, proxsuite::nullopt, C, l, proxsuite::nullopt);
+                    }
                     _qp_population[i]->solve();
 
                     // Update velocities only when QP is successfull
