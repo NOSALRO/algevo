@@ -44,22 +44,26 @@ def configure(conf):
         native = ''
         native_icc = ''
 
+    # We require C++17
     if conf.env.CXX_NAME in ["icc", "icpc"]:
-        common_flags = "-Wall -std=c++11"
-        opt_flags = " -O3 -xHost " + native_icc + " -unroll -g"
+        common_flags = "-Wall -std=c++17"
+        opt_flags = " -O3 -xHost -unroll -g " + native_icc
     elif conf.env.CXX_NAME in ["clang"]:
-        common_flags = "-Wall -std=c++11"
-        opt_flags = " -O3 " + native + " -g"
+        common_flags = "-Wall -std=c++17"
+        # no-stack-check required for Catalina
+        opt_flags = " -O3 -g -faligned-new -fno-stack-check -Wno-narrowing" + native
     else:
         gcc_version = int(conf.env['CC_VERSION'][0]+conf.env['CC_VERSION'][1])
-        if gcc_version < 47:
-            conf.fatal('You need gcc version >= 4.7 for this project.')
+        if gcc_version < 50:
+            conf.fatal('We need C++17 features. Your compiler does not support them!')
         else:
-            common_flags = "-Wall -std=c++11"
-        opt_flags = " -O3 " + native + " -g"
+            common_flags = "-Wall -std=c++17"
+        opt_flags = " -O3 -g " + native
+        if gcc_version >= 71:
+            opt_flags = opt_flags + " -faligned-new"
 
     all_flags = common_flags + opt_flags
-    conf.env['CXXFLAGS'] = conf.env['CXXFLAGS'] + all_flags.split(' ')
+    conf.env['CXXFLAGS'] = conf.env['CXXFLAGS'] + all_flags.split()
     print(conf.env['CXXFLAGS'])
 
 def build(bld):
@@ -91,6 +95,14 @@ def build(bld):
                 uselib = libs,
                 cxxflags = cxxflags,
                 target = 'sphere_de')
+
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'src/examples/traj_opt.cpp',
+                includes = './src /opt/proxsuite/include',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'traj_opt')
 
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
