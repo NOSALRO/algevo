@@ -15,8 +15,6 @@ blddir = 'build'
 from waflib.Build import BuildContext
 from waflib import Logs
 from waflib.Tools import waf_unit_test
-import eigen
-import tbb
 import avx
 
 
@@ -25,6 +23,7 @@ def options(opt):
     opt.load('compiler_c')
     opt.load('eigen')
     opt.load('tbb')
+    opt.load('proxqp')
 
     opt.add_option('--no-native', action='store_true', help='Do not compile with march=native optimization flags', dest='no_native')
 
@@ -33,9 +32,11 @@ def configure(conf):
     conf.load('compiler_c')
     conf.load('eigen')
     conf.load('tbb')
+    conf.load('proxqp')
 
     conf.check_eigen(required=True)
     conf.check_tbb(required=True)
+    conf.check_proxqp(required=True)
 
     native = '-march=native'
     native_icc = 'mtune=native'
@@ -67,7 +68,7 @@ def configure(conf):
     print(conf.env['CXXFLAGS'])
 
 def build(bld):
-    libs = 'EIGEN TBB '
+    libs = 'EIGEN TBB PROXQP '
 
     cxxflags = bld.get_env()['CXXFLAGS']
 
@@ -99,7 +100,7 @@ def build(bld):
     bld.program(features = 'cxx',
                 install_path = None,
                 source = 'src/examples/traj_opt.cpp',
-                includes = './src /opt/proxsuite/include',
+                includes = './src',
                 uselib = libs,
                 cxxflags = cxxflags,
                 target = 'traj_opt')
@@ -107,7 +108,7 @@ def build(bld):
     bld.program(features = 'cxx',
                 install_path = None,
                 source = 'src/examples/planar_quad.cpp',
-                includes = './src /opt/proxsuite/include',
+                includes = './src',
                 uselib = libs,
                 cxxflags = cxxflags,
                 target = 'planar_quad')
