@@ -232,7 +232,7 @@ namespace algevo {
                     // _qp_population[i]->settings.max_iter = 1000;
                     // _qp_population[i]->settings.max_iter_in = 1000;
                     // _qp_population[i]->settings.verbose = true;
-                    // _qp_population[i]->settings.initial_guess = proxsuite::proxqp::InitialGuessStatus::NO_INITIAL_GUESS;
+                    _qp_population[i]->settings.initial_guess = proxsuite::proxqp::InitialGuessStatus::NO_INITIAL_GUESS;
                     if (_nfe > 0)
                         _qp_population[i]->settings.initial_guess = proxsuite::proxqp::InitialGuessStatus::WARM_START_WITH_PREVIOUS_RESULT;
                     if (Params::neq_dim > 0 && Params::nin_dim > 0) {

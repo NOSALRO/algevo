@@ -104,6 +104,14 @@ def build(bld):
                 cxxflags = cxxflags,
                 target = 'traj_opt')
 
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'src/examples/planar_quad.cpp',
+                includes = './src /opt/proxsuite/include',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'planar_quad')
+
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
         for filename in fnmatch.filter(filenames, '*.hpp'):
