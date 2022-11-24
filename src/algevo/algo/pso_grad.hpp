@@ -35,6 +35,18 @@ namespace algevo {
             using qp_mat_t = proxsuite::proxqp::dense::Mat<Scalar>;
             using qp_vec_t = proxsuite::proxqp::dense::Vec<Scalar>;
 
+            struct EvalInfo {
+                Scalar value;
+                Scalar constraint_violation;
+                Eigen::Matrix<Scalar, -1, 1> grad;
+                Eigen::Matrix<Scalar, -1, 1> eq_violation;
+                Eigen::Matrix<Scalar, -1, -1> grad_eq;
+                Eigen::Matrix<Scalar, -1, 1> ineq_violation;
+                Eigen::Matrix<Scalar, -1, -1> grad_ineq;
+            };
+
+            using eval_info_t = std::array<EvalInfo, Params::pop_size>;
+
             using rdist_scalar_t = std::uniform_real_distribution<Scalar>;
             using rgen_scalar_t = tools::RandomGenerator<rdist_scalar_t>;
             using rdist_scalar_gauss_t = std::normal_distribution<Scalar>;
@@ -69,6 +81,7 @@ namespace algevo {
                 // Initialize QPs
                 for (unsigned int i = 0; i < Params::pop_size; i++) {
                     _qp_population[i] = std::make_unique<qp_t>(Params::dim, Params::neq_dim, Params::nin_dim);
+                    _qp_init[i] = false;
                 }
             }
 
@@ -77,12 +90,12 @@ namespace algevo {
                 // Evaluate population
                 _evaluate_population();
 
-                _nfe += Params::pop_size;
-
                 // Do updates
                 tools::parallel_loop(0, Params::pop_size, [this](size_t i) {
                     _update_particle(i);
                 });
+
+                _nfe += Params::pop_size;
             }
 
             const population_t& population() const { return _population; }
@@ -103,6 +116,8 @@ namespace algevo {
 
             // One QP object per particle
             qp_array_t _qp_population;
+            std::array<bool, Params::pop_size> _qp_init;
+            eval_info_t _eval_info;
 
             // Best ever per particle
             fit_t _fit_best_local;
@@ -147,6 +162,18 @@ namespace algevo {
                 _best_neighbor = neighborhoods_t(Params::num_neighborhoods, Params::dim);
 
                 _best = x_t::Constant(Params::dim, -std::numeric_limits<Scalar>::max());
+
+                for (unsigned int i = 0; i < Params::pop_size; i++) {
+                    _eval_info[i].value = 0.;
+                    _eval_info[i].constraint_violation = 0.;
+
+                    _eval_info[i].grad = Eigen::Matrix<Scalar, -1, 1>::Zero(Params::dim);
+                    _eval_info[i].eq_violation = Eigen::Matrix<Scalar, -1, 1>::Zero(Params::neq_dim);
+                    _eval_info[i].ineq_violation = Eigen::Matrix<Scalar, -1, 1>::Zero(Params::nin_dim);
+
+                    _eval_info[i].grad_eq = Eigen::Matrix<Scalar, -1, -1>::Zero(Params::neq_dim, Params::dim);
+                    _eval_info[i].grad_ineq = Eigen::Matrix<Scalar, -1, -1>::Zero(Params::nin_dim, Params::dim);
+                }
             }
 
             void _evaluate_population()
@@ -161,6 +188,17 @@ namespace algevo {
                         _cv_best_local[i] = cv;
                         _best_local.row(i) = _population.row(i);
                     }
+
+                    // Cache last evaluation for particle update
+                    _eval_info[i].value = f;
+                    _eval_info[i].constraint_violation = cv;
+
+                    _eval_info[i].grad = std::get<1>(res);
+                    _eval_info[i].eq_violation = std::get<2>(res);
+                    _eval_info[i].ineq_violation = std::get<4>(res);
+
+                    _eval_info[i].grad_eq = std::get<3>(res);
+                    _eval_info[i].grad_ineq = std::get<5>(res);
                 });
 
                 // Update neighborhood and global bests
@@ -168,13 +206,13 @@ namespace algevo {
                     if (_cv_best_local[i] < _cv_best || (_is_equal(_cv_best_local[i], _cv_best) && _fit_best_local[i] > _fit_best)) {
                         _fit_best = _fit_best_local[i];
                         _cv_best = _cv_best_local[i];
-                        _best = _population.row(i); // TO-DO: Maybe tag to avoid copies?
+                        _best = _best_local.row(i); // TO-DO: Maybe tag to avoid copies?
                     }
 
                     if (_cv_best_local[i] < _cv_best_neighbor[_neighborhood_ids[i]] || (_is_equal(_cv_best_local[i], _cv_best_neighbor[_neighborhood_ids[i]]) && _fit_best_local[i] > _fit_best_neighbor[_neighborhood_ids[i]])) {
                         _fit_best_neighbor[_neighborhood_ids[i]] = _fit_best_local[i];
                         _cv_best_neighbor[_neighborhood_ids[i]] = _cv_best_local[i];
-                        _best_neighbor.row(_neighborhood_ids[i]) = _population.row(i); // TO-DO: Maybe tag to avoid copies?
+                        _best_neighbor.row(_neighborhood_ids[i]) = _best_local.row(i); // TO-DO: Maybe tag to avoid copies?
                     }
                 }
             }
@@ -189,6 +227,7 @@ namespace algevo {
                 static constexpr Scalar c1 = Params::c1;
                 static constexpr Scalar c2 = Params::c2;
                 static constexpr Scalar u = Params::u;
+                static constexpr Scalar qp_cr = Params::qp_cr;
                 static constexpr Scalar one_minus_u = static_cast<Scalar>(1.) - u;
                 static constexpr Scalar one_minus_qp_alpha = static_cast<Scalar>(1.) - Params::qp_alpha;
 
@@ -207,48 +246,38 @@ namespace algevo {
                     _velocities.row(i) = chi * (_velocities.row(i) + c1 * r1 * (_best_local.row(i) - _population.row(i)) + c2 * r2 * (_best - _population.row(i)));
 
                 // Compute LP-ish direction to move in
-                if (Params::qp_alpha > zero) {
-                    // Evaluate all grads etc
-                    auto res = _fit_evals[i].eval_all(_population.row(i));
-
+                if (Params::qp_alpha > zero && rgen.rand() < qp_cr) {
+                    // Get cached variables
                     qp_mat_t H = qp_mat_t::Identity(Params::dim, Params::dim);
+                    qp_vec_t g = -_eval_info[i].grad;
 
-                    qp_vec_t g(Params::dim);
-                    g = -std::get<1>(res);
+                    qp_mat_t A = _eval_info[i].grad_eq;
+                    qp_vec_t b = -_eval_info[i].eq_violation;
 
-                    qp_mat_t A(Params::neq_dim, Params::dim);
-                    A = std::get<3>(res);
-
-                    qp_vec_t b(Params::neq_dim);
-                    b = -std::get<2>(res);
-
-                    qp_mat_t C(Params::nin_dim, Params::dim);
-                    C = std::get<5>(res);
-
-                    qp_vec_t l(Params::nin_dim);
-                    l = -std::get<4>(res);
+                    qp_mat_t C = _eval_info[i].grad_ineq;
+                    qp_vec_t l = -_eval_info[i].ineq_violation;
 
                     // _qp_population[i]->settings.eps_abs = 1e-3; // choose accuracy needed
                     // _qp_population[i]->settings.max_iter = 1000;
                     // _qp_population[i]->settings.max_iter_in = 1000;
                     // _qp_population[i]->settings.verbose = true;
                     _qp_population[i]->settings.initial_guess = proxsuite::proxqp::InitialGuessStatus::NO_INITIAL_GUESS;
-                    if (_nfe > 0)
+                    if (_qp_init[i])
                         _qp_population[i]->settings.initial_guess = proxsuite::proxqp::InitialGuessStatus::WARM_START_WITH_PREVIOUS_RESULT;
                     if (Params::neq_dim > 0 && Params::nin_dim > 0) {
-                        if (_nfe == 0)
+                        if (!_qp_init[i])
                             _qp_population[i]->init(H, g, A, b, C, l, proxsuite::nullopt);
                         else
                             _qp_population[i]->update(H, g, A, b, C, l, proxsuite::nullopt);
                     }
                     else if (Params::neq_dim > 0) {
-                        if (_nfe == 0)
+                        if (!_qp_init[i])
                             _qp_population[i]->init(H, g, A, b, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt);
                         else
                             _qp_population[i]->update(H, g, A, b, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt);
                     }
                     else if (Params::nin_dim > 0) {
-                        if (_nfe == 0)
+                        if (!_qp_init[i])
                             _qp_population[i]->init(H, g, proxsuite::nullopt, proxsuite::nullopt, C, l, proxsuite::nullopt);
                         else
                             _qp_population[i]->update(H, g, proxsuite::nullopt, proxsuite::nullopt, C, l, proxsuite::nullopt);
@@ -257,12 +286,16 @@ namespace algevo {
 
                     // Update velocities only when QP is successfull
                     if (_qp_population[i]->results.info.status == proxsuite::proxqp::QPSolverOutput::PROXQP_SOLVED) {
+                        _qp_init[i] = true;
                         // if (i == 0) {
                         //     std::cout << _population.row(i) << std::endl;
                         //     std::cout << Params::qp_alpha * _qp_population[i]->results.x.transpose() << std::endl;
                         //     std::cout << std::endl;
                         // }
-                        _velocities.row(i) = Params::qp_alpha * _qp_population[i]->results.x.transpose() + one_minus_qp_alpha * _velocities.row(i);
+                        if (one_minus_qp_alpha > zero)
+                            _velocities.row(i) = Params::qp_alpha * _qp_population[i]->results.x.transpose() + one_minus_qp_alpha * _velocities.row(i);
+                        else
+                            _velocities.row(i) = _qp_population[i]->results.x.transpose();
                     }
                 }
 

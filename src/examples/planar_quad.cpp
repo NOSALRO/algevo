@@ -224,7 +224,8 @@ struct ParamsPSO {
     static constexpr double mu_noise = 0.;
     static constexpr double sigma_noise = 0.0001;
 
-    static constexpr double qp_alpha = 0.9;
+    static constexpr double qp_alpha = 1.;
+    static constexpr double qp_cr = 0.2;
     static constexpr double epsilon_comp = 1e-4;
 };
 

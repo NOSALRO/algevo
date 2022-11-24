@@ -132,12 +132,12 @@ namespace algevo {
                 for (unsigned int i = 0; i < Params::pop_size; i++) {
                     if (_fit_best_local[i] > _fit_best) {
                         _fit_best = _fit_best_local[i];
-                        _best = _population.row(i); // TO-DO: Maybe tag to avoid copies?
+                        _best = _best_local.row(i); // TO-DO: Maybe tag to avoid copies?
                     }
 
                     if (_fit_best_local[i] > _fit_best_neighbor[_neighborhood_ids[i]]) {
                         _fit_best_neighbor[_neighborhood_ids[i]] = _fit_best_local[i];
-                        _best_neighbor.row(_neighborhood_ids[i]) = _population.row(i); // TO-DO: Maybe tag to avoid copies?
+                        _best_neighbor.row(_neighborhood_ids[i]) = _best_local.row(i); // TO-DO: Maybe tag to avoid copies?
                     }
                 }
             }
