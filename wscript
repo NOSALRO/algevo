@@ -113,6 +113,14 @@ def build(bld):
                 cxxflags = cxxflags,
                 target = 'planar_quad')
 
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'src/examples/kinematic_traj.cpp',
+                includes = './src',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'kinematic_traj')
+
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
         for filename in fnmatch.filter(filenames, '*.hpp'):

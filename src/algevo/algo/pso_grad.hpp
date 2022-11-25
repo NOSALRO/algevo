@@ -245,6 +245,13 @@ namespace algevo {
                 else // if (one_minus_u > zero) // LPSO
                     _velocities.row(i) = chi * (_velocities.row(i) + c1 * r1 * (_best_local.row(i) - _population.row(i)) + c2 * r2 * (_best - _population.row(i)));
 
+                // Add noise if wanted, helps to get away from local minima
+                if (Params::noisy_velocity) {
+                    for (unsigned int j = 0; j < Params::dim; j++) {
+                        _velocities(i, j) += rgen_gauss.rand();
+                    }
+                }
+
                 // Compute LP-ish direction to move in
                 if (Params::qp_alpha > zero && rgen.rand() < qp_cr) {
                     // Get cached variables
@@ -296,13 +303,6 @@ namespace algevo {
                             _velocities.row(i) = Params::qp_alpha * _qp_population[i]->results.x.transpose() + one_minus_qp_alpha * _velocities.row(i);
                         else
                             _velocities.row(i) = _qp_population[i]->results.x.transpose();
-                    }
-                }
-
-                // Add noise if wanted, helps to get away from local minima
-                if (Params::noisy_velocity) {
-                    for (unsigned int j = 0; j < Params::dim; j++) {
-                        _velocities(i, j) += rgen_gauss.rand();
                     }
                 }
 
