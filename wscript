@@ -24,6 +24,7 @@ def options(opt):
     opt.load('eigen')
     opt.load('tbb')
     opt.load('proxqp')
+    opt.load('simde')
 
     opt.add_option('--no-native', action='store_true', help='Do not compile with march=native optimization flags', dest='no_native')
 
@@ -33,17 +34,22 @@ def configure(conf):
     conf.load('eigen')
     conf.load('tbb')
     conf.load('proxqp')
+    conf.load('simde')
 
     conf.check_eigen(required=True)
     conf.check_tbb(required=True)
     conf.check_proxqp(required=True)
+    conf.check_simde(required=False)
 
-    native = '-march=native'
-    native_icc = 'mtune=native'
+    native = '-march=native -DPROXSUITE_VECTORIZE'
+    native_icc = 'mtune=native -DPROXSUITE_VECTORIZE'
 
     if conf.options.no_native:
         native = ''
         native_icc = ''
+    elif 'INCLUDES_SIMDE' not in conf.env:
+        native = '-march=native'
+        native_icc = 'mtune=native'
 
     # We require C++17
     if conf.env.CXX_NAME in ["icc", "icpc"]:
@@ -63,12 +69,12 @@ def configure(conf):
         if gcc_version >= 71:
             opt_flags = opt_flags + " -faligned-new"
 
-    all_flags = common_flags + opt_flags
+    all_flags = common_flags + opt_flags + " -DNDEBUG"
     conf.env['CXXFLAGS'] = conf.env['CXXFLAGS'] + all_flags.split()
     print(conf.env['CXXFLAGS'])
 
 def build(bld):
-    libs = 'EIGEN TBB PROXQP '
+    libs = 'EIGEN TBB PROXQP SIMDE '
 
     cxxflags = bld.get_env()['CXXFLAGS']
 
