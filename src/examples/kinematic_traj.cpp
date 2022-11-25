@@ -7,7 +7,7 @@
 template <typename Scalar = double>
 struct SimplePath {
     static constexpr unsigned int D = 2;
-    static constexpr unsigned int T = 10;
+    static constexpr unsigned int T = 20;
 
     static constexpr unsigned int dim = T * D;
     static constexpr unsigned int dim_features = dim;
@@ -153,7 +153,7 @@ struct ParamsPSO {
     static constexpr double mu_noise = 0.;
     static constexpr double sigma_noise = 0.0001;
 
-    static constexpr double qp_alpha = 1.;
+    static constexpr double qp_alpha = 0.5;
     static constexpr double qp_cr = 0.2;
     static constexpr double epsilon_comp = 1e-4;
 };
@@ -163,7 +163,7 @@ int main()
     SPath s;
     algevo::algo::ParticleSwarmOptimizationGrad<ParamsPSO, SPath> pso;
 
-    for (unsigned int i = 0; i < 100; i++) {
+    for (unsigned int i = 0; i < 500; i++) {
         pso.step();
         // std::cout << i << ": " << pso.best_value() << std::endl;
         std::cout << pso.nfe() << " ";
