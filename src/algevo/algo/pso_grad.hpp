@@ -265,8 +265,8 @@ namespace algevo {
                     qp_vec_t l = -_eval_info[i].ineq_violation;
 
                     // _qp_population[i]->settings.eps_abs = 1e-3; // choose accuracy needed
-                    // _qp_population[i]->settings.max_iter = 1000;
-                    // _qp_population[i]->settings.max_iter_in = 1000;
+                    _qp_population[i]->settings.max_iter = 20;
+                    _qp_population[i]->settings.max_iter_in = 10;
                     // _qp_population[i]->settings.verbose = true;
                     _qp_population[i]->settings.initial_guess = proxsuite::proxqp::InitialGuessStatus::NO_INITIAL_GUESS;
                     if (_qp_init[i])
@@ -292,17 +292,18 @@ namespace algevo {
                     _qp_population[i]->solve();
 
                     // Update velocities only when QP is successfull
-                    if (_qp_population[i]->results.info.status == proxsuite::proxqp::QPSolverOutput::PROXQP_SOLVED) {
+                    if (_qp_population[i]->results.info.status == proxsuite::proxqp::QPSolverOutput::PROXQP_SOLVED || _qp_population[i]->results.info.status == proxsuite::proxqp::QPSolverOutput::PROXQP_MAX_ITER_REACHED) {
                         _qp_init[i] = true;
                         // if (i == 0) {
                         //     std::cout << _population.row(i) << std::endl;
-                        //     std::cout << Params::qp_alpha * _qp_population[i]->results.x.transpose() << std::endl;
+                        //     std::cout << Params::qp_weight * Params::qp_alpha * _qp_population[i]->results.x.transpose() << std::endl;
                         //     std::cout << std::endl;
                         // }
+                        // TO-DO: Maybe add Armijo? https://solmaz.eng.uci.edu/Teaching/MAE206/Lecture4.pdf
                         if (one_minus_qp_alpha > zero)
-                            _velocities.row(i) = Params::qp_alpha * _qp_population[i]->results.x.transpose() + one_minus_qp_alpha * _velocities.row(i);
+                            _velocities.row(i) = Params::qp_weight * Params::qp_alpha * _qp_population[i]->results.x.transpose() + one_minus_qp_alpha * _velocities.row(i);
                         else
-                            _velocities.row(i) = _qp_population[i]->results.x.transpose();
+                            _velocities.row(i) = Params::qp_weight * _qp_population[i]->results.x.transpose();
                     }
                 }
 

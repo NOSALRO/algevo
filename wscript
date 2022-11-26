@@ -73,6 +73,10 @@ def configure(conf):
     conf.env['CXXFLAGS'] = conf.env['CXXFLAGS'] + all_flags.split()
     print(conf.env['CXXFLAGS'])
 
+    conf.env.INCLUDES_TOWR = ['/opt/nosalro/include']
+    conf.env.LIBPATH_TOWR = ['/opt/nosalro/lib']
+    conf.env.LIB_TOWR = ['ifopt_core', 'ifopt_ipopt', 'towr']
+
 def build(bld):
     libs = 'EIGEN TBB PROXQP SIMDE '
 
@@ -126,6 +130,14 @@ def build(bld):
                 uselib = libs,
                 cxxflags = cxxflags,
                 target = 'kinematic_traj')
+
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'src/examples/towr_example.cpp',
+                includes = './src',
+                uselib = libs + 'TOWR',
+                cxxflags = cxxflags,
+                target = 'towr_example')
 
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):

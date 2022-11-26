@@ -226,6 +226,7 @@ struct ParamsPSO {
 
     static constexpr double qp_alpha = 1.;
     static constexpr double qp_cr = 0.2;
+    static constexpr double qp_weight = 1.;
     static constexpr double epsilon_comp = 1e-4;
 };
 
