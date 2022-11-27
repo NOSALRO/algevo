@@ -91,78 +91,82 @@ struct TowrFit {
         Matrix G(nin_dim, dim); // inequality
         G.setZero();
 
+        // var_sets = {"force-ee-force_0", "splineacc-base-lin", "splineacc-base-ang", "dynamic", "terrain-ee-motion_0", "rangeofmotion-0", "swing-ee-motion_0"};
+
         size_t next_eq = 0;
         size_t next_in = 0;
         // Iterate over constraints to create matrices and violations
-        // for (const auto& ct : nlp.GetConstraints().GetComponents()) {
-        //     int n = ct->GetRows();
-        //     // if (verbose > 0)
-        //     //     std::cout << ct->GetName() << ": " << n << std::endl;
-        //     if (n < 0)
-        //         continue;
-        //     // if (ct->GetName() != "rangeofmotion-0")
-        //     //     continue;
-        //     // if (ct->GetName() != "force-ee-force_0" && ct->GetName() != "splineacc-base-lin" && ct->GetName() != "splineacc-base-ang" && ct->GetName() != "terrain-ee-motion_0" && ct->GetName() != "swing-ee-motion_0")
-        //     //     continue;
-        //     Vector vals = ct->GetValues();
-        //     Matrix cons = ct->GetJacobian();
-        //     for (int i = 0; i < n; i++) {
-        //         auto bounds = ct->GetBounds()[i];
-        //         if (std::abs(bounds.lower_ - bounds.upper_) < 1e-8) {
-        //             if (verbose > 1)
-        //                 std::cout << "Equality(" << next_eq << "): " << vals[i] << " == " << bounds.upper_ << std::endl;
-        //             c[next_eq] = vals[i] - bounds.lower_;
-        //             C.row(next_eq) = cons.row(i);
-
-        //             next_eq++;
-        //         }
-        //         else {
-        //             if (verbose > 1)
-        //                 std::cout << "Inequality(" << next_in << "): " << vals[i] << " >= " << bounds.lower_ << std::endl;
-        //             g[next_in] = vals[i] - bounds.lower_;
-        //             G.row(next_eq) = cons.row(i);
-
-        //             if (verbose > 1)
-        //                 std::cout << "Inequality(" << next_in + 1 << "): " << -vals[i] << " <= " << bounds.upper_ << std::endl;
-        //             g[next_in + 1] = bounds.upper_ - vals[i];
-        //             G.row(next_eq) = -cons.row(i);
-
-        //             next_in += 2;
-        //         }
-        //     }
-        // }
-
-        Vector cons = nlp.EvaluateConstraints(x.data());
-        const auto& cbounds = nlp.GetBoundsOnConstraints();
-        Matrix jac = nlp.GetJacobianOfConstraints();
-        for (size_t i = 0; i < cons.size(); i++) {
-            if (std::abs(cbounds[i].lower_ - cbounds[i].upper_) < 1e-8) {
-                if (verbose > 1) {
-                    std::cout << "Equality(" << next_eq << "): " << cons[i] << " == " << cbounds[i].upper_ << std::endl;
-                }
-                c[next_eq] = cons[i] - cbounds[i].lower_;
-                C.row(next_eq) = jac.row(i);
-                next_eq++;
-            }
-            else {
-                if (cbounds[i].lower_ > -1e20) {
+        for (const auto& ct : nlp.GetConstraints().GetComponents()) {
+            int n = ct->GetRows();
+            // if (verbose > 0)
+            //     std::cout << ct->GetName() << ": " << n << std::endl;
+            if (n < 0)
+                continue;
+            Vector vals = ct->GetValues();
+            Matrix cons = ct->GetJacobian();
+            for (int i = 0; i < n; i++) {
+                auto bounds = ct->GetBounds()[i];
+                if (std::abs(bounds.lower_ - bounds.upper_) < 1e-8) {
                     if (verbose > 1)
-                        std::cout << "Inequality(" << next_in << "): " << cons[i] << " >= " << cbounds[i].lower_ << std::endl;
-                    g[next_in] = cons[i] - cbounds[i].lower_;
-                    G.row(next_in) = jac.row(i);
-                    next_in++;
-                }
+                        std::cout << "Equality(" << next_eq << "): " << vals[i] << " == " << bounds.upper_ << std::endl;
+                    c[next_eq] = vals[i] - bounds.lower_;
+                    C.row(next_eq) = cons.row(i);
 
-                if (cbounds[i].upper_ < 1e20) {
-                    if (verbose > 1)
-                        std::cout << "Inequality(" << next_in << "): " << -cons[i] << " <= " << cbounds[i].upper_ << std::endl;
-                    g[next_in] = cbounds[i].upper_ - cons[i];
-                    G.row(next_in) = -jac.row(i);
-                    next_in++;
+                    next_eq++;
                 }
-                // next_in += 2;
+                else {
+                    if (bounds.lower_ > -1e20) {
+                        if (verbose > 1)
+                            std::cout << "Inequality(" << next_in << "): " << vals[i] << " >= " << bounds.lower_ << std::endl;
+                        g[next_in] = vals[i] - bounds.lower_;
+                        G.row(next_in) = cons.row(i);
+
+                        next_in++;
+                    }
+
+                    if (bounds.upper_ < 1e20) {
+                        if (verbose > 1)
+                            std::cout << "Inequality(" << next_in << "): " << -vals[i] << " <= " << bounds.upper_ << std::endl;
+                        g[next_in] = bounds.upper_ - vals[i];
+                        G.row(next_in) = -cons.row(i);
+
+                        next_in++;
+                    }
+                }
             }
         }
+
+        // Vector cons = nlp.EvaluateConstraints(x.data());
+        // const auto& cbounds = nlp.GetBoundsOnConstraints();
+        // Matrix jac = nlp.GetJacobianOfConstraints();
+        // for (size_t i = 0; i < cons.size(); i++) {
+        //     if (std::abs(cbounds[i].lower_ - cbounds[i].upper_) < 1e-8) {
+        //         if (verbose > 1) {
+        //             std::cout << "Equality(" << next_eq << "): " << cons[i] << " == " << cbounds[i].upper_ << std::endl;
+        //         }
+        //         c[next_eq] = cons[i] - cbounds[i].lower_;
+        //         C.row(next_eq) = jac.row(i);
+        //         next_eq++;
+        //     }
+        //     else {
+        //         if (cbounds[i].lower_ > -1e20) {
+        //             if (verbose > 1)
+        //                 std::cout << "Inequality(" << next_in << "): " << cons[i] << " >= " << cbounds[i].lower_ << std::endl;
+        //             g[next_in] = cons[i] - cbounds[i].lower_;
+        //             G.row(next_in) = jac.row(i);
+        //             next_in++;
+        //         }
+
+        //         if (cbounds[i].upper_ < 1e20) {
+        //             if (verbose > 1)
+        //                 std::cout << "Inequality(" << next_in << "): " << -cons[i] << " <= " << cbounds[i].upper_ << std::endl;
+        //             g[next_in] = cbounds[i].upper_ - cons[i];
+        //             G.row(next_in) = -jac.row(i);
+        //             next_in++;
+        //         }
+        //         // next_in += 2;
+        //     }
+        // }
 
         // Add variable bounds
         const auto& bounds = nlp.GetBoundsOnOptimizationVariables();
@@ -314,7 +318,7 @@ int main()
         pso.step();
         // std::cout << i << ": " << pso.best_value() << std::endl;
         std::cout << pso.nfe() << " ";
-        s.eval_all(pso.best(), 1);
+        s.eval_all(pso.population().row(0), 1);
         std::cin.get();
     }
     std::cout << pso.nfe() << " ";
