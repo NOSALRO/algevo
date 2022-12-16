@@ -125,8 +125,8 @@ struct DoubleIntegrator {
 
     static constexpr unsigned int dim = T * Ad + (T - 1) * D;
     static constexpr unsigned int dim_features = dim;
-    static constexpr double max_value = 10.;
-    static constexpr double min_value = -10.;
+    static constexpr double max_value = 100.;
+    static constexpr double min_value = -100.;
     static constexpr double max_features_value = 1.;
     static constexpr double min_features_value = 0.;
     // static constexpr unsigned int neq_dim = 1;
@@ -258,8 +258,8 @@ struct ParamsPSO {
     static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
     static constexpr double max_value = DoubleInt::max_value;
     static constexpr double min_value = DoubleInt::min_value;
-    static constexpr double max_vel = 1.;
-    static constexpr double min_vel = -1.;
+    static constexpr double max_vel = 100.;
+    static constexpr double min_vel = -100.;
 
     // Constraints
     static constexpr unsigned int neq_dim = DoubleInt::neq_dim;
@@ -270,13 +270,12 @@ struct ParamsPSO {
     static constexpr double c2 = 2.05;
     static constexpr double u = 0.5;
 
-    static constexpr bool noisy_velocity = false;
+    static constexpr bool noisy_velocity = true;
     static constexpr double mu_noise = 0.;
     static constexpr double sigma_noise = 0.0001;
 
-    static constexpr double qp_alpha = 0.9;
-    static constexpr double qp_cr = 1.;
-    static constexpr double qp_weight = 1.;
+    static constexpr double qp_alpha = 1.;
+    static constexpr double qp_cr = 0.9;
     static constexpr double epsilon_comp = 1e-4;
 };
 
@@ -306,7 +305,7 @@ int main()
     //     }
     // }
 
-    for (unsigned int i = 0; i < 20; i++) {
+    for (unsigned int i = 0; i < (1000 / ParamsPSO::pop_size); i++) {
         pso.step();
         // std::cout << i << ": " << pso.best_value() << std::endl;
         std::cout << pso.nfe() << " ";

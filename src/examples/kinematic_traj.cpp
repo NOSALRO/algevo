@@ -155,7 +155,6 @@ struct ParamsPSO {
 
     static constexpr double qp_alpha = 0.5;
     static constexpr double qp_cr = 0.2;
-    static constexpr double qp_weight = 1.;
     static constexpr double epsilon_comp = 1e-4;
 };
 
@@ -164,7 +163,7 @@ int main()
     SPath s;
     algevo::algo::ParticleSwarmOptimizationGrad<ParamsPSO, SPath> pso;
 
-    for (unsigned int i = 0; i < 500; i++) {
+    for (unsigned int i = 0; i < (5000 / ParamsPSO::pop_size); i++) {
         pso.step();
         // std::cout << i << ": " << pso.best_value() << std::endl;
         std::cout << pso.nfe() << " ";

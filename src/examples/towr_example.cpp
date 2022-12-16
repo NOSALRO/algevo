@@ -15,8 +15,8 @@ template <typename Scalar = double>
 struct TowrFit {
     static constexpr unsigned int dim = 339;
     static constexpr unsigned int dim_features = dim;
-    static constexpr double max_value = 20000.;
-    static constexpr double min_value = -20000.;
+    static constexpr double max_value = 1000.;
+    static constexpr double min_value = -1000.;
     static constexpr double max_features_value = 1.;
     static constexpr double min_features_value = 0.;
     static constexpr unsigned int nin_dim = 225;
@@ -29,7 +29,7 @@ struct TowrFit {
     ifopt::Problem nlp;
     SplineHolder solution;
 
-    TowrFit()
+    TowrFit(bool include_dynamics = true)
     {
         // terrain
         formulation.terrain_ = std::make_shared<FlatGround>(0.0);
@@ -58,7 +58,8 @@ struct TowrFit {
 
         // formulation.params_.constraints_.erase(formulation.params_.constraints_.begin() + 1);
         formulation.params_.constraints_.clear();
-        formulation.params_.constraints_.push_back(towr::Parameters::ConstraintName::Dynamic);
+        if (include_dynamics)
+            formulation.params_.constraints_.push_back(towr::Parameters::ConstraintName::Dynamic);
         formulation.params_.constraints_.push_back(towr::Parameters::ConstraintName::Force);
         formulation.params_.constraints_.push_back(towr::Parameters::ConstraintName::Terrain);
         formulation.params_.constraints_.push_back(towr::Parameters::ConstraintName::EndeffectorRom);
@@ -271,8 +272,8 @@ using Towr = TowrFit<double>;
 struct ParamsPSO {
     static constexpr int seed = -1;
     static constexpr unsigned int dim = Towr::dim;
-    static constexpr unsigned int pop_size = 1;
-    static constexpr unsigned int num_neighbors = 1;
+    static constexpr unsigned int pop_size = 20;
+    static constexpr unsigned int num_neighbors = 4;
     static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
     static constexpr double max_value = Towr::max_value;
     static constexpr double min_value = Towr::min_value;
@@ -288,38 +289,36 @@ struct ParamsPSO {
     static constexpr double c2 = 2.05;
     static constexpr double u = 0.5;
 
-    static constexpr bool noisy_velocity = false;
+    static constexpr bool noisy_velocity = true;
     static constexpr double mu_noise = 0.;
     static constexpr double sigma_noise = 0.0001;
 
     static constexpr double qp_alpha = 1.;
-    static constexpr double qp_cr = 1.;
-    static constexpr double qp_weight = 1.;
+    static constexpr double qp_cr = 0.5;
     static constexpr double epsilon_comp = 1e-4;
 };
 
 int main()
 {
-    Towr s;
+    Towr s(true);
     algevo::algo::ParticleSwarmOptimizationGrad<ParamsPSO, Towr> pso;
 
     algevo::tools::rgen_gauss_t rgen(0., 0.001);
     // Custom Initialization
     for (unsigned int k = 0; k < ParamsPSO::pop_size; k++) {
         pso.population().row(k) = s.nlp.GetVariableValues();
-        if (k > 0)
-            pso.population().row(k).array() += rgen.rand();
+        if (k > 0) {
+            for (unsigned int i = 0; i < ParamsPSO::dim; i++)
+                pso.population()(k, i) += rgen.rand();
+        }
     }
 
-    // s.eval_all(pso.population().row(0), 3);
-    // exit(1);
-
-    for (unsigned int i = 0; i < 500; i++) {
+    for (unsigned int i = 0; i < (500 / ParamsPSO::pop_size); i++) {
         pso.step();
         // std::cout << i << ": " << pso.best_value() << std::endl;
-        std::cout << pso.nfe() << " ";
-        s.eval_all(pso.population().row(0), 1);
-        std::cin.get();
+        std::cout << pso.nfe() << " " << pso.best_value() << " ";
+        s.eval_all(pso.best(), 1);
+        // std::cin.get();
     }
     std::cout << pso.nfe() << " ";
     s.eval_all(pso.best(), 1);
