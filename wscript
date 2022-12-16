@@ -25,6 +25,8 @@ def options(opt):
     opt.load('tbb')
     opt.load('proxqp')
     opt.load('simde')
+    opt.load('ifopt')
+    opt.load('towr')
 
     opt.add_option('--no-native', action='store_true', help='Do not compile with march=native optimization flags', dest='no_native')
 
@@ -35,11 +37,15 @@ def configure(conf):
     conf.load('tbb')
     conf.load('proxqp')
     conf.load('simde')
+    conf.load('ifopt')
+    conf.load('towr')
 
     conf.check_eigen(required=True)
     conf.check_tbb(required=True)
     conf.check_proxqp(required=True)
     conf.check_simde(required=False)
+    conf.check_ifopt(required=False)
+    conf.check_towr(required=False)
 
     native = '-march=native -DPROXSUITE_VECTORIZE'
     native_icc = 'mtune=native -DPROXSUITE_VECTORIZE'
@@ -73,9 +79,6 @@ def configure(conf):
     conf.env['CXXFLAGS'] = conf.env['CXXFLAGS'] + all_flags.split()
     print(conf.env['CXXFLAGS'])
 
-    conf.env.INCLUDES_TOWR = ['/opt/nosalro/include']
-    conf.env.LIBPATH_TOWR = ['/opt/nosalro/lib']
-    conf.env.LIB_TOWR = ['ifopt_core', 'ifopt_ipopt', 'towr']
 
 def build(bld):
     libs = 'EIGEN TBB PROXQP SIMDE '
@@ -131,13 +134,14 @@ def build(bld):
                 cxxflags = cxxflags,
                 target = 'kinematic_traj')
 
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/towr_example.cpp',
-                includes = './src',
-                uselib = libs + 'TOWR',
-                cxxflags = cxxflags,
-                target = 'towr_example')
+    if 'INCLUDES_TOWR' in bld.env and 'INCLUDES_IFOPT' in bld.env:
+        bld.program(features = 'cxx',
+                    install_path = None,
+                    source = 'src/examples/towr_example.cpp',
+                    includes = './src',
+                    uselib = libs + 'IFOPT TOWR',
+                    cxxflags = cxxflags,
+                    target = 'towr_example')
 
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
