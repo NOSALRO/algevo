@@ -289,6 +289,12 @@ namespace algevo {
                         else
                             _qp_population[i]->update(H, g, proxsuite::nullopt, proxsuite::nullopt, C, l, proxsuite::nullopt);
                     }
+                    else {
+                        if (!_qp_init[i])
+                            _qp_population[i]->init(H, g, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt);
+                        else
+                            _qp_population[i]->update(H, g, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt, proxsuite::nullopt);
+                    }
                     _qp_population[i]->solve();
 
                     // Update velocities only when QP is successfull
@@ -323,7 +329,7 @@ namespace algevo {
 
             static bool _is_equal(double a, double b, double eps = Params::epsilon_comp)
             {
-                return std::abs(a - b) < eps;
+                return std::abs(a - b) <= eps;
             }
         };
     } // namespace algo

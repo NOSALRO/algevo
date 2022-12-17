@@ -134,6 +134,14 @@ def build(bld):
                 cxxflags = cxxflags,
                 target = 'kinematic_traj')
 
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'src/examples/noisy_lstq.cpp',
+                includes = './src',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'noisy_lstq')
+
     if 'INCLUDES_TOWR' in bld.env and 'INCLUDES_IFOPT' in bld.env:
         bld.program(features = 'cxx',
                     install_path = None,
