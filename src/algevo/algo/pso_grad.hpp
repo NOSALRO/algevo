@@ -307,9 +307,9 @@ namespace algevo {
                         // }
                         // TO-DO: Maybe add Armijo? https://solmaz.eng.uci.edu/Teaching/MAE206/Lecture4.pdf
                         if (one_minus_qp_alpha > zero)
-                            _velocities.row(i) = Params::qp_alpha * _qp_population[i]->results.x.transpose() + one_minus_qp_alpha * _velocities.row(i);
+                            _velocities.row(i) = Params::qp_alpha * Params::qp_weight * _qp_population[i]->results.x.transpose() + one_minus_qp_alpha * _velocities.row(i);
                         else
-                            _velocities.row(i) = _qp_population[i]->results.x.transpose();
+                            _velocities.row(i) = Params::qp_weight * _qp_population[i]->results.x.transpose();
                     }
                 }
 
