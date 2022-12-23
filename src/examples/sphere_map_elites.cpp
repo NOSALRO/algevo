@@ -26,16 +26,16 @@ int main()
     params.sigma_1 = 0.1; // 0.005;
     params.sigma_2 = 0.3;
 
-    // Instantiate algorithm
-    Algo map_elites(params);
-
     // Compute centroids via CVT
     // It can take some while, if num_cells is big
     unsigned int num_points = params.num_cells * 100;
-    Eigen::MatrixXd data = (Eigen::MatrixXd::Random(num_points, params.dim_features) + Eigen::MatrixXd::Constant(num_points, params.dim_features, 1.)) / 2.;
+    Eigen::MatrixXd data = (Eigen::MatrixXd::Random(params.dim_features, num_points) + Eigen::MatrixXd::Constant(params.dim_features, num_points, 1.)) / 2.;
     algevo::tools::KMeans<> k(100, 1, 1e-4);
-    Eigen::MatrixXd centroids = k.cluster(data, params.num_cells);
-    map_elites.centroids() = centroids.transpose();
+    // Set centroids
+    params.centroids = k.cluster(data, params.num_cells);
+
+    // Instantiate algorithm
+    Algo map_elites(params);
 
     for (unsigned int i = 0; i < 500; i++) {
         auto log = map_elites.step();

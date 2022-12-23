@@ -64,6 +64,8 @@ namespace algevo {
 
                 x_t min_feat;
                 x_t max_feat;
+
+                mat_t centroids;
             };
 
             struct IterationLog {
@@ -76,6 +78,14 @@ namespace algevo {
 
             MapElites(const Params& params) : _params(params), _rgen(0., 1., params.seed), _rgen_ranks(0, params.num_cells - 1, params.seed)
             {
+                assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
+                assert(_params.dim > 0 && "Dimensions not set!");
+                assert(_params.dim_features > 0 && "Neighbor size not set!");
+                assert(_params.num_cells > 0 && "Number of cells not set!");
+                assert(_params.min_value.size() == _params.dim && _params.max_value.size() == _params.dim && "Min/max values dimensions should be the same as the problem dimensions!");
+                assert(_params.min_feat.size() == _params.dim_features && _params.max_feat.size() == _params.dim_features && "Min/max feature dimensions should be the same as the feature dimensions!");
+                assert((_params.centroids.size() == 0 || (_params.centroids.rows() == _params.dim_features && _params.centroids.cols() == _params.num_cells)) && "Centroids dimensions not set correctly!");
+
                 _allocate_data();
 
                 // Initialize random archive
@@ -86,12 +96,17 @@ namespace algevo {
                     }
                 }
 
-                // Initialize centroids
-                for (unsigned int j = 0; j < _params.dim_features; j++) {
-                    Scalar range = (_params.max_feat[j] - _params.min_feat[j]);
-                    for (unsigned int i = 0; i < _params.num_cells; i++) {
-                        _centroids(j, i) = _rgen.rand() * range + _params.min_feat[j];
+                // Initialize random centroids if needed
+                if (_params.centroids.size() == 0) {
+                    for (unsigned int j = 0; j < _params.dim_features; j++) {
+                        Scalar range = (_params.max_feat[j] - _params.min_feat[j]);
+                        for (unsigned int i = 0; i < _params.num_cells; i++) {
+                            _centroids(j, i) = _rgen.rand() * range + _params.min_feat[j];
+                        }
                     }
+                }
+                else {
+                    _centroids = _params.centroids;
                 }
             }
 

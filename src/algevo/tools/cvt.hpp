@@ -23,19 +23,19 @@ namespace algevo {
 
             static Matrix init(const Matrix& data, const unsigned int num_clusters)
             {
-                // number of instances = data.rows()
-                assert((int)num_clusters <= data.rows());
+                // number of instances = data.cols()
+                assert((int)num_clusters <= data.cols());
 
-                std::vector<unsigned int> indices(data.rows());
+                std::vector<unsigned int> indices(data.cols());
                 std::iota(indices.begin(), indices.end(), 0);
                 std::random_shuffle(indices.begin(), indices.end());
 
                 // Create the centroids
-                unsigned int dim = data.cols();
-                Matrix centroids = Matrix::Zero(num_clusters, dim);
+                unsigned int dim = data.rows();
+                Matrix centroids = Matrix::Zero(dim, num_clusters);
 
                 for (unsigned int i = 0; i < num_clusters; i++)
-                    centroids.row(i) = data.row(indices[i]);
+                    centroids.col(i) = data.col(indices[i]);
 
                 return centroids;
             }
@@ -60,7 +60,7 @@ namespace algevo {
 
             const Matrix& cluster(const Matrix& data, unsigned int num_clusters)
             {
-                std::vector<Matrix> all_centroids(_restarts, Matrix::Zero(num_clusters, data.cols()));
+                std::vector<Matrix> all_centroids(_restarts, Matrix::Zero(data.rows(), num_clusters));
                 std::vector<Scalar> all_losses(_restarts, 0.0);
 
                 for (unsigned int r = 0; r < _restarts; r++) {
@@ -73,7 +73,7 @@ namespace algevo {
                     Scalar delta = _tolerance;
 
                     for (unsigned int i = 0; i < _max_iterations; i++) {
-                        Matrix new_centroids = Matrix::Zero(num_clusters, data.cols());
+                        Matrix new_centroids = Matrix::Zero(data.rows(), num_clusters);
 
                         // Calculate the distances
                         std::vector<unsigned int> counts(num_clusters, 0);
@@ -108,7 +108,7 @@ namespace algevo {
         protected:
             Scalar _calc_distances(const Matrix& data, const Matrix& centroids, Matrix& new_centroids, std::vector<unsigned int>& counts)
             {
-                unsigned int nb_points = data.rows();
+                unsigned int nb_points = data.cols();
                 Scalar sum = 0.;
 #ifdef USE_TBB
                 static tbb::mutex sm;
@@ -117,10 +117,10 @@ namespace algevo {
                 tools::parallel_loop(0, nb_points, [&](unsigned int i) {
                     // Find the closest centroid to this point.
                     Scalar min_distance = std::numeric_limits<Scalar>::infinity();
-                    unsigned int closest_cluster = centroids.rows(); // Invalid value.
+                    unsigned int closest_cluster = centroids.cols(); // Invalid value.
 
-                    for (int j = 0; j < centroids.rows(); j++) {
-                        const Scalar distance = DistanceMetric::evaluate(data.row(i), centroids.row(j));
+                    for (int j = 0; j < centroids.cols(); j++) {
+                        const Scalar distance = DistanceMetric::evaluate(data.col(i), centroids.col(j));
 
                         if (distance < min_distance) {
                             min_distance = distance;
@@ -139,7 +139,7 @@ namespace algevo {
 #endif
                     sum += min_distance;
                     // We now have the minimum distance centroid index.
-                    new_centroids.row(closest_cluster) += data.row(i);
+                    new_centroids.col(closest_cluster) += data.col(i);
                     counts[closest_cluster]++;
 #ifdef USE_TBB
                     lock.release();
@@ -153,8 +153,8 @@ namespace algevo {
             void _update_centroids(Matrix& new_centroids, const std::vector<unsigned int>& counts)
             {
                 // TODO: vectorize
-                for (int i = 0; i < new_centroids.rows(); i++) {
-                    new_centroids.row(i) = new_centroids.row(i) / (Scalar)counts[i];
+                for (int i = 0; i < new_centroids.cols(); i++) {
+                    new_centroids.col(i) = new_centroids.col(i) / (Scalar)counts[i];
                 }
             }
 
