@@ -7,5 +7,5 @@ Efficient (almost) single file implementations of evolutionary algorithms.
 - Particle Swarm Optimization (UPSO)
 - Gradient-Assisted Particle Swarm Optimization for Constrained Optimization
 - Differential Evolution (DE)
-- MAP-Elites (grid-based and CVT-MAP-Elites)
+- MAP-Elites (CVT-MAP-Elites)
 
