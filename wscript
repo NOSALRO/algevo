@@ -153,6 +153,8 @@ def build(bld):
 
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
+        if 'examples' in root:
+            continue
         for filename in fnmatch.filter(filenames, '*.hpp'):
             install_files.append(os.path.join(root, filename))
     install_files = [f[len(bld.path.abspath())+1:] for f in install_files]
