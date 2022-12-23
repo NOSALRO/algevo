@@ -5,43 +5,41 @@
 
 #include "problems.hpp"
 
+// Typedefs
 using FitSphere = algevo::FitSphere<>;
-
-struct Params {
-    static constexpr int seed = -1;
-    static constexpr unsigned int dim = FitSphere::dim;
-    static constexpr unsigned int dim_features = FitSphere::dim_features;
-    static constexpr unsigned int batch_size = (dim > 100) ? dim : 128;
-    static constexpr double max_value = FitSphere::max_value;
-    static constexpr double min_value = FitSphere::min_value;
-    static constexpr double max_features_value = FitSphere::max_features_value;
-    static constexpr double min_features_value = FitSphere::min_features_value;
-    // static constexpr double sigma_1 = 0.005;
-    // static constexpr double sigma_2 = 0.3;
-    static constexpr double sigma_1 = 0.1;
-    static constexpr double sigma_2 = 0.3;
-    static constexpr bool grid = false;
-    static constexpr unsigned int grid_size = 10;
-    static constexpr unsigned int num_cells = grid ? grid_size * grid_size : 20;
-};
+using Algo = algevo::algo::MapElites<FitSphere>;
+using Params = Algo::Params;
 
 int main()
 {
     std::srand(time(0));
+    // Set parameters
+    Params params;
+    params.dim = FitSphere::dim;
+    params.dim_features = FitSphere::dim_features;
+    params.pop_size = (params.dim > 100) ? params.dim : 128;
+    params.num_cells = 20;
+    params.max_value = Algo::x_t::Constant(params.dim, FitSphere::max_value);
+    params.min_value = Algo::x_t::Constant(params.dim, FitSphere::min_value);
+    params.max_feat = Algo::x_t::Constant(params.dim, FitSphere::max_features_value);
+    params.min_feat = Algo::x_t::Constant(params.dim, FitSphere::min_features_value);
+    params.sigma_1 = 0.1; // 0.005;
+    params.sigma_2 = 0.3;
 
-    algevo::algo::MapElites<Params, FitSphere> map_elites;
+    // Instantiate algorithm
+    Algo map_elites(params);
 
     // Compute centroids via CVT
     // It can take some while, if num_cells is big
-    unsigned int num_points = Params::num_cells * 100;
-    Eigen::MatrixXd data = (Eigen::MatrixXd::Random(num_points, Params::dim_features) + Eigen::MatrixXd::Constant(num_points, Params::dim_features, 1.)) / 2.;
+    unsigned int num_points = params.num_cells * 100;
+    Eigen::MatrixXd data = (Eigen::MatrixXd::Random(num_points, params.dim_features) + Eigen::MatrixXd::Constant(num_points, params.dim_features, 1.)) / 2.;
     algevo::tools::KMeans<> k(100, 1, 1e-4);
-    Eigen::MatrixXd centroids = k.cluster(data, Params::num_cells);
-    map_elites.centroids() = centroids;
+    Eigen::MatrixXd centroids = k.cluster(data, params.num_cells);
+    map_elites.centroids() = centroids.transpose();
 
-    for (unsigned int i = 0; i < 2000; i++) {
-        map_elites.step();
-        std::cout << i << ": " << map_elites.archive_fit().maxCoeff() << std::endl;
+    for (unsigned int i = 0; i < 500; i++) {
+        auto log = map_elites.step();
+        std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << std::endl;
     }
     return 0;
 }

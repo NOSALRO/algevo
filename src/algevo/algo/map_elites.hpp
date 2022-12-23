@@ -35,124 +35,128 @@ namespace algevo {
         // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
         // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         /// END OF LICENSE
-        template <typename Params, typename Fit, typename Scalar = double>
+        template <typename Fit, typename Scalar = double>
         class MapElites {
         public:
-            using archive_t = Eigen::Matrix<Scalar, -1, -1>;
-            using centroids_t = Eigen::Matrix<Scalar, -1, -1>;
-            using batch_t = Eigen::Matrix<Scalar, -1, -1>;
-            using fit_t = Eigen::Matrix<Scalar, -1, 1>;
-            using x_t = Eigen::Matrix<Scalar, 1, -1>;
-
-            using batch_ranks_t = std::array<int, Params::batch_size * 2>;
-            using new_rank_t = std::array<int, Params::batch_size>;
-
-            using fit_eval_t = std::array<Fit, Params::batch_size>;
+            using mat_t = Eigen::Matrix<Scalar, -1, -1>;
+            using x_t = Eigen::Matrix<Scalar, -1, 1>;
+            using batch_ranks_t = std::vector<int>;
+            using fit_eval_t = std::vector<Fit>;
 
             using rdist_scalar_t = std::uniform_real_distribution<Scalar>;
             using rgen_scalar_t = tools::RandomGenerator<rdist_scalar_t>;
             using rdist_scalar_gauss_t = std::normal_distribution<Scalar>;
             using rgen_scalar_gauss_t = tools::RandomGenerator<rdist_scalar_gauss_t>;
 
-            MapElites()
+            struct Params {
+                int seed = -1;
+
+                unsigned int dim = 0;
+                unsigned int dim_features = 0;
+                unsigned int pop_size = 0;
+                unsigned int num_cells = 0;
+
+                Scalar sigma_1 = static_cast<Scalar>(0.005);
+                Scalar sigma_2 = static_cast<Scalar>(0.3);
+
+                x_t min_value;
+                x_t max_value;
+
+                x_t min_feat;
+                x_t max_feat;
+            };
+
+            struct IterationLog {
+                unsigned int iterations = 0;
+                unsigned int func_evals = 0;
+
+                x_t best;
+                Scalar best_value;
+            };
+
+            MapElites(const Params& params) : _params(params), _rgen(0., 1., params.seed), _rgen_ranks(0, params.num_cells - 1, params.seed)
             {
                 _allocate_data();
 
                 // Initialize random archive
-                for (unsigned int i = 0; i < Params::num_cells; i++) {
-                    for (unsigned int j = 0; j < Params::dim; j++) {
-                        _archive(i, j) = _rgen.rand();
+                for (unsigned int j = 0; j < _params.dim; j++) {
+                    Scalar range = (_params.max_value[j] - _params.min_value[j]);
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        _archive(j, i) = _rgen.rand() * range + _params.min_value[j];
                     }
                 }
 
                 // Initialize centroids
-                if (Params::grid) {
-                    // TO-DO: Allow for bigger grids
-                    static_assert((Params::grid && Params::dim_features == 2) || !Params::grid, "Too big of a grid!");
-                    for (unsigned int i = 0; i < Params::grid_size; i++)
-                        for (unsigned int j = 0; j < Params::grid_size; j++) {
-                            _centroids(i * Params::grid_size + j, 0) = static_cast<Scalar>(i) / Params::grid_size;
-                            _centroids(i * Params::grid_size + j, 1) = static_cast<Scalar>(j) / Params::grid_size;
-                        }
-                }
-                else {
-                    for (unsigned int i = 0; i < Params::num_cells; i++) {
-                        for (unsigned int j = 0; j < Params::dim_features; j++) {
-                            _centroids(i, j) = _rgen_features.rand();
-                        }
+                for (unsigned int j = 0; j < _params.dim_features; j++) {
+                    Scalar range = (_params.max_feat[j] - _params.min_feat[j]);
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        _centroids(j, i) = _rgen.rand() * range + _params.min_feat[j];
                     }
                 }
             }
 
-            const archive_t& population() const { return _archive; }
-            archive_t& population() { return _archive; }
+            const mat_t& population() const { return _archive; }
+            mat_t& population() { return _archive; }
 
-            const archive_t& archive() const { return _archive; }
-            archive_t& archive() { return _archive; }
+            const mat_t& archive() const { return _archive; }
+            mat_t& archive() { return _archive; }
 
-            const centroids_t& centroids() const { return _centroids; }
-            centroids_t& centroids() { return _centroids; }
+            const mat_t& centroids() const { return _centroids; }
+            mat_t& centroids() { return _centroids; }
 
-            const fit_t& archive_fit() const { return _archive_fit; }
+            const x_t& archive_fit() const { return _archive_fit; }
 
             double qd_score() const
             {
                 double qd = 0;
-                for (int i = 0; i < Params::num_cells; i++)
+                for (int i = 0; i < _params.num_cells; i++)
                     if (_archive_fit(i) != -std::numeric_limits<Scalar>::max())
                         qd += _archive_fit(i);
                 return qd;
             }
 
-            void step()
+            IterationLog step()
             {
                 // Uniform random selection
-                for (unsigned int i = 0; i < Params::batch_size * 2; i++)
+                for (unsigned int i = 0; i < _params.pop_size * 2; i++)
                     _batch_ranks[i] = _rgen_ranks.rand(); // yes, from all the map!
 
                 // Crossover - line variation
-                for (unsigned int i = 0; i < Params::batch_size; i++)
-                    _batch.row(i) = _archive.row(_batch_ranks[i * 2]) + Params::sigma_2 * _rgen_gauss.rand() * (_archive.row(_batch_ranks[i * 2]) - _archive.row(_batch_ranks[i * 2 + 1]));
+                for (unsigned int i = 0; i < _params.pop_size; i++)
+                    _batch.col(i) = _archive.col(_batch_ranks[i * 2]) + _params.sigma_2 * _rgen_gauss.rand() * (_archive.col(_batch_ranks[i * 2]) - _archive.col(_batch_ranks[i * 2 + 1]));
 
                 // Gaussian mutation
-                for (unsigned int i = 0; i < Params::batch_size; i++)
-                    for (unsigned int j = 0; j < Params::dim; j++) {
-                        _batch(i, j) += _rgen_gauss.rand() * Params::sigma_1;
+                for (unsigned int j = 0; j < _params.dim; j++)
+                    for (unsigned int i = 0; i < _params.pop_size; i++) {
+                        _batch(j, i) += _rgen_gauss.rand() * _params.sigma_1;
                         // clip in [min,max]
-                        _batch(i, j) = std::max(Params::min_value, std::min(Params::max_value, _batch(i, j)));
+                        _batch(j, i) = std::max(_params.min_value[j], std::min(_params.max_value[j], _batch(i, j)));
                     }
 
                 // evaluate the batch
-                tools::parallel_loop(0, Params::batch_size, [this](unsigned int i) {
+                tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
                     // TO-DO: Check how to avoid copying here
-                    x_t p(Params::dim_features);
-                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.row(i));
+                    x_t p(_params.dim_features);
+                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i));
                     // clip in [min,max]
-                    for (unsigned int j = 0; j < Params::dim; j++) {
-                        p(j) = std::max(Params::min_features_value, std::min(Params::max_features_value, p(j)));
+                    for (unsigned int j = 0; j < _params.dim; j++) {
+                        p(j) = std::max(_params.min_feat[j], std::min(_params.max_feat[j], p(j)));
                     }
-                    _batch_features.row(i) = p;
+                    _batch_features.col(i) = p;
                 });
 
                 // competition
                 std::fill(_new_rank.begin(), _new_rank.end(), -1);
-                tools::parallel_loop(0, Params::batch_size, [this](unsigned int i) {
+                tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
                     // search for the closest centroid / the grid
                     int best_i = -1;
-                    if (Params::grid) {
-                        int x = std::round(_batch_features(i, 0) * (Params::grid_size - 1));
-                        int y = std::round(_batch_features(i, 1) * (Params::grid_size - 1));
-                        best_i = x * Params::grid_size + y;
-                    }
-                    else {
-                        // TO-DO: Do not iterate over all cells; make a tree or something
-                        double best_dist = std::numeric_limits<Scalar>::max();
-                        for (int j = 0; j < static_cast<int>(Params::num_cells); j++) {
-                            double d = (_batch_features.row(i) - _centroids.row(j)).squaredNorm();
-                            if (d < best_dist) {
-                                best_dist = d;
-                                best_i = j;
-                            }
+                    // TO-DO: Do not iterate over all cells; make a tree or something
+                    double best_dist = std::numeric_limits<Scalar>::max();
+                    for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
+                        double d = (_batch_features.col(i) - _centroids.col(j)).squaredNorm();
+                        if (d < best_dist) {
+                            best_dist = d;
+                            best_i = j;
                         }
                     }
                     if (_batch_fit(i) > _archive_fit(best_i))
@@ -160,48 +164,67 @@ namespace algevo {
                 });
 
                 // apply the new ranks
-                for (unsigned int i = 0; i < Params::batch_size; i++) {
+                for (unsigned int i = 0; i < _params.pop_size; i++) {
                     if (_new_rank[i] != -1) {
-                        _archive.row(_new_rank[i]) = _batch.row(i);
+                        _archive.col(_new_rank[i]) = _batch.col(i);
                         _archive_fit(_new_rank[i]) = _batch_fit(i);
                     }
                 }
+
+                // Update iteration log
+                _log.iterations++;
+                _log.func_evals += _params.pop_size;
+                int best_i;
+                _log.best_value = _archive_fit.maxCoeff(&best_i);
+                _log.best = _archive.col(best_i);
+
+                return _log;
             }
 
         protected:
+            // Parameters
+            Params _params;
+
+            // Iteration Log
+            IterationLog _log;
+
             // Actual population (current values)
-            archive_t _archive;
-            fit_t _archive_fit;
+            mat_t _archive;
+            x_t _archive_fit;
 
             // Centroids
-            centroids_t _centroids;
+            mat_t _centroids;
 
             // Batch
-            batch_t _batch;
-            centroids_t _batch_features;
-            fit_t _batch_fit;
+            mat_t _batch;
+            mat_t _batch_features;
+            x_t _batch_fit;
             batch_ranks_t _batch_ranks;
-            new_rank_t _new_rank;
+            batch_ranks_t _new_rank;
 
             // Evaluators
             fit_eval_t _fit_evals;
 
             // Random numbers
-            rgen_scalar_t _rgen = rgen_scalar_t(Params::min_value, Params::max_value, Params::seed);
-            rgen_scalar_t _rgen_features = rgen_scalar_t(Params::min_features_value, Params::max_features_value, Params::seed);
-            tools::rgen_int_t _rgen_ranks = tools::rgen_int_t(0, Params::num_cells - 1, Params::seed);
+            rgen_scalar_t _rgen;
+            tools::rgen_int_t _rgen_ranks;
             rgen_scalar_gauss_t _rgen_gauss = rgen_scalar_gauss_t(static_cast<Scalar>(0.), static_cast<Scalar>(1.));
 
             void _allocate_data()
             {
-                _archive = archive_t(Params::num_cells, Params::dim);
-                _archive_fit = fit_t::Constant(Params::num_cells, -std::numeric_limits<Scalar>::max());
+                _archive = mat_t(_params.dim, _params.num_cells);
+                _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
 
-                _batch = batch_t(Params::batch_size, Params::dim);
-                _batch_fit = fit_t::Constant(Params::batch_size, -std::numeric_limits<Scalar>::max());
-                _batch_features = centroids_t(Params::batch_size, Params::dim_features);
+                _batch = mat_t(_params.dim, _params.pop_size);
+                _batch_fit = x_t::Constant(_params.pop_size, -std::numeric_limits<Scalar>::max());
+                _batch_features = mat_t(_params.dim_features, _params.pop_size);
 
-                _centroids = centroids_t(Params::num_cells, Params::dim_features);
+                _centroids = mat_t(_params.dim_features, _params.num_cells);
+
+                _batch_ranks.resize(_params.pop_size * 2);
+                _new_rank.resize(_params.pop_size);
+
+                _fit_evals.resize(_params.pop_size);
             }
         };
     } // namespace algo
