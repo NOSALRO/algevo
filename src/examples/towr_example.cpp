@@ -281,10 +281,10 @@ int main()
     params.num_neighbors = 4;
     params.max_value = Algo::x_t::Constant(params.dim, Towr::max_value);
     params.min_value = Algo::x_t::Constant(params.dim, Towr::min_value);
-    params.max_vel = Algo::x_t::Constant(params.dim, 100.);
-    params.min_vel = Algo::x_t::Constant(params.dim, -100.);
+    params.max_vel = Algo::x_t::Constant(params.dim, 200.);
+    params.min_vel = Algo::x_t::Constant(params.dim, -200.);
     params.qp_alpha = 1.;
-    params.qp_cr = 0.5;
+    params.qp_cr = 0.6;
     params.neq_dim = Towr::neq_dim;
     params.nin_dim = Towr::nin_dim;
 
