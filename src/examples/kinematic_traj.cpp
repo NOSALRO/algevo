@@ -15,14 +15,12 @@ struct SimplePath {
     static constexpr double min_value = -10.;
     static constexpr double max_features_value = 1.;
     static constexpr double min_features_value = 0.;
-    // static constexpr unsigned int neq_dim = 1;
-    // static constexpr unsigned int nin_dim = 0;
     static constexpr unsigned int neq_dim = 0;
     static constexpr unsigned int nin_dim = T + 1;
 
-    using x_t = Eigen::Matrix<Scalar, 1, dim>;
-    using c_t = Eigen::Matrix<Scalar, 1, neq_dim>;
-    using g_t = Eigen::Matrix<Scalar, 1, nin_dim>;
+    using x_t = Eigen::Matrix<Scalar, dim, 1>;
+    using c_t = Eigen::Matrix<Scalar, neq_dim, 1>;
+    using g_t = Eigen::Matrix<Scalar, nin_dim, 1>;
     using C_t = Eigen::Matrix<Scalar, -1, -1>;
     using G_t = Eigen::Matrix<Scalar, -1, -1>;
 
@@ -125,53 +123,50 @@ struct SimplePath {
 
         return {-cost, -grad, c, C, g, G, cv};
     }
+
+    static void print(const x_t& sol)
+    {
+        std::cout << "(10, 10) -> ";
+        for (unsigned int i = 0; i < T; i++) {
+            std::cout << "(" << sol(i * D) << ", " << sol(i * D + 1) << ") -> ";
+        }
+        std::cout << "(0, 0)" << std::endl;
+    }
 };
 
+// Typedefs
 using SPath = SimplePath<double>;
-
-struct ParamsPSO {
-    static constexpr int seed = -1;
-    static constexpr unsigned int dim = SPath::dim;
-    static constexpr unsigned int pop_size = 40;
-    static constexpr unsigned int num_neighbors = 4;
-    static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
-    static constexpr double max_value = SPath::max_value;
-    static constexpr double min_value = SPath::min_value;
-    static constexpr double max_vel = 1.;
-    static constexpr double min_vel = -1.;
-
-    // Constraints
-    static constexpr unsigned int neq_dim = SPath::neq_dim;
-    static constexpr unsigned int nin_dim = SPath::nin_dim;
-
-    static constexpr double chi = 0.729;
-    static constexpr double c1 = 2.05;
-    static constexpr double c2 = 2.05;
-    static constexpr double u = 0.5;
-
-    static constexpr bool noisy_velocity = true;
-    static constexpr double mu_noise = 0.;
-    static constexpr double sigma_noise = 0.0001;
-
-    static constexpr double qp_alpha = 0.5;
-    static constexpr double qp_cr = 0.2;
-    static constexpr double qp_weight = 1.;
-    static constexpr double epsilon_comp = 1e-4;
-};
+using Algo = algevo::algo::ParticleSwarmOptimizationGrad<SPath>;
+using Params = Algo::Params;
 
 int main()
 {
-    SPath s;
-    algevo::algo::ParticleSwarmOptimizationGrad<ParamsPSO, SPath> pso;
+    // Set parameters
+    Params params;
+    params.dim = SPath::dim;
+    params.pop_size = 40;
+    params.num_neighbors = 4;
+    params.max_value = Algo::x_t::Constant(params.dim, SPath::max_value);
+    params.min_value = Algo::x_t::Constant(params.dim, SPath::min_value);
+    params.max_vel = Algo::x_t::Constant(params.dim, 1.);
+    params.min_vel = Algo::x_t::Constant(params.dim, -1.);
+    params.qp_alpha = 0.5;
+    params.qp_cr = 0.2;
+    params.neq_dim = SPath::neq_dim;
+    params.nin_dim = SPath::nin_dim;
 
-    for (unsigned int i = 0; i < (5000 / ParamsPSO::pop_size); i++) {
-        pso.step();
-        // std::cout << i << ": " << pso.best_value() << std::endl;
-        std::cout << pso.nfe() << " ";
-        s.eval_all(pso.best(), true);
+    // Instantiate algorithm
+    Algo pso(params);
+
+    // Run a few iterations!
+    Algo::IterationLog log;
+    for (unsigned int i = 0; i < (5000 / params.pop_size); i++) {
+        log = pso.step();
+        std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> " << log.best_cv << std::endl;
     }
-    std::cout << pso.nfe() << " ";
-    s.eval_all(pso.best(), true);
-    std::cout << "Best: " << pso.best() << std::endl;
+
+    // Print best particle
+    SPath::print(log.best);
+
     return 0;
 }

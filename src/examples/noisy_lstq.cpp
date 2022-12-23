@@ -67,12 +67,12 @@ struct NoisyLstSq {
         grad = err + (global::_grad_bias + grad_noise) * err.norm();
 
         Scalar cv = 0.;
-        // for (unsigned int i = 0; i < neq_dim; i++) {
-        //     cv += std::abs(c[i]);
-        // }
-        // for (unsigned int i = 0; i < nin_dim; i++) {
-        //     cv += std::abs(std::min(0., g[i]));
-        // }
+        for (unsigned int i = 0; i < neq_dim; i++) {
+            cv += std::abs(c[i]);
+        }
+        for (unsigned int i = 0; i < nin_dim; i++) {
+            cv += std::abs(std::min(0., g[i]));
+        }
 
         if (verbose) {
             std::cout << grad.norm() << std::endl;
@@ -83,40 +83,14 @@ struct NoisyLstSq {
     }
 };
 
+// Typedefs
 using NoisyLSq = NoisyLstSq<double>;
-
-struct ParamsPSO {
-    static constexpr int seed = -1;
-    static constexpr unsigned int dim = NoisyLSq::dim;
-    static constexpr unsigned int pop_size = 40;
-    static constexpr unsigned int num_neighbors = 4;
-    static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
-    static constexpr double max_value = NoisyLSq::max_value;
-    static constexpr double min_value = NoisyLSq::min_value;
-    static constexpr double max_vel = 1.;
-    static constexpr double min_vel = -1.;
-
-    // Constraints
-    static constexpr unsigned int neq_dim = NoisyLSq::neq_dim;
-    static constexpr unsigned int nin_dim = NoisyLSq::nin_dim;
-
-    static constexpr double chi = 0.729;
-    static constexpr double c1 = 2.05;
-    static constexpr double c2 = 2.05;
-    static constexpr double u = 0.5;
-
-    static constexpr bool noisy_velocity = true;
-    static constexpr double mu_noise = 0.;
-    static constexpr double sigma_noise = 0.0001;
-
-    static constexpr double qp_alpha = 1.;
-    static constexpr double qp_cr = 0.05;
-    static constexpr double qp_weight = 1.;
-    static constexpr double epsilon_comp = 1e-4;
-};
+using Algo = algevo::algo::ParticleSwarmOptimizationGrad<NoisyLSq>;
+using Params = Algo::Params;
 
 int main()
 {
+    // Instantiate problem values
     {
         global::_A = NoisyLSq::Matrix::Zero(NoisyLSq::nsamples, NoisyLSq::dim);
         global::_b = NoisyLSq::Vector::Zero(NoisyLSq::nsamples);
@@ -139,26 +113,38 @@ int main()
         global::_f_optimal = 0.5 * (global::_A * global::_optimal - global::_b).squaredNorm() / static_cast<double>(NoisyLSq::nsamples);
     }
 
-    NoisyLSq s;
-    algevo::algo::ParticleSwarmOptimizationGrad<ParamsPSO, NoisyLSq> pso;
+    // Set parameters
+    Params params;
+    params.dim = NoisyLSq::dim;
+    params.pop_size = 40;
+    params.num_neighbors = 4;
+    params.max_value = Algo::x_t::Constant(params.dim, NoisyLSq::max_value);
+    params.min_value = Algo::x_t::Constant(params.dim, NoisyLSq::min_value);
+    params.max_vel = Algo::x_t::Constant(params.dim, 1.);
+    params.min_vel = Algo::x_t::Constant(params.dim, -1.);
+    params.qp_alpha = 1.;
+    params.qp_cr = 0.05;
+    params.neq_dim = NoisyLSq::neq_dim;
+    params.nin_dim = NoisyLSq::nin_dim;
 
+    // Instantiate algorithm
+    Algo pso(params);
+
+    // Custom population initialization for faster convergence
     algevo::tools::rgen_gauss_t rgen(0., 0.1);
-    for (unsigned int k = 0; k < ParamsPSO::pop_size; k++) {
-        pso.population().row(k).setZero();
-        // pso.velocities().row(k).setZero();
-        for (unsigned int i = 0; i < ParamsPSO::dim; i++) {
-            pso.population()(k, i) += rgen.rand();
+    for (unsigned int k = 0; k < params.pop_size; k++) {
+        pso.population().col(k).setZero();
+        // pso.velocities().col(k).setZero();
+        for (unsigned int i = 0; i < params.dim; i++) {
+            pso.population()(i, k) += rgen.rand();
         }
     }
 
-    for (unsigned int i = 0; i < (20000 / ParamsPSO::pop_size); i++) {
-        pso.step();
-        // std::cout << i << ": " << pso.best_value() << std::endl;
-        std::cout << pso.nfe() << " ";
-        s.eval_all(pso.best(), true);
+    // Run a few iterations!
+    for (unsigned int i = 0; i < (20000 / params.pop_size); i++) {
+        auto log = pso.step();
+        std::cout << log.iterations << "(" << log.func_evals << "): " << -log.best_value << " vs " << global::_f_optimal << std::endl;
     }
-    std::cout << pso.nfe() << " ";
-    s.eval_all(pso.best(), true);
-    // std::cout << "Best: " << pso.best() << std::endl;
+
     return 0;
 }

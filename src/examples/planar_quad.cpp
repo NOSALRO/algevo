@@ -198,76 +198,59 @@ struct PlanarQuad {
     }
 };
 
+// Typedefs
 using PQuad = PlanarQuad<double>;
-
-struct ParamsPSO {
-    static constexpr int seed = -1;
-    static constexpr unsigned int dim = PQuad::dim;
-    static constexpr unsigned int pop_size = 10;
-    static constexpr unsigned int num_neighbors = 2;
-    static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
-    static constexpr double max_value = PQuad::max_value;
-    static constexpr double min_value = PQuad::min_value;
-    static constexpr double max_vel = 1000.;
-    static constexpr double min_vel = -1000.;
-
-    // Constraints
-    static constexpr unsigned int neq_dim = PQuad::neq_dim;
-    static constexpr unsigned int nin_dim = PQuad::nin_dim;
-
-    static constexpr double chi = 0.729;
-    static constexpr double c1 = 2.05;
-    static constexpr double c2 = 2.05;
-    static constexpr double u = 0.5;
-
-    static constexpr bool noisy_velocity = true;
-    static constexpr double mu_noise = 0.;
-    static constexpr double sigma_noise = 0.0001;
-
-    static constexpr double qp_alpha = 1.;
-    static constexpr double qp_cr = 0.9;
-    static constexpr double qp_weight = 1.;
-    static constexpr double epsilon_comp = 1e-4;
-};
+using Algo = algevo::algo::ParticleSwarmOptimizationGrad<PQuad>;
+using Params = Algo::Params;
 
 int main()
 {
-    PQuad s;
-    algevo::algo::ParticleSwarmOptimizationGrad<ParamsPSO, PQuad> pso;
+    // Set parameters
+    Params params;
+    params.dim = PQuad::dim;
+    params.pop_size = 10;
+    params.num_neighbors = 2;
+    params.max_value = Algo::x_t::Constant(params.dim, PQuad::max_value);
+    params.min_value = Algo::x_t::Constant(params.dim, PQuad::min_value);
+    params.max_vel = Algo::x_t::Constant(params.dim, 100.);
+    params.min_vel = Algo::x_t::Constant(params.dim, -100.);
+    params.qp_alpha = 1.;
+    params.qp_cr = 0.9;
+    params.neq_dim = PQuad::neq_dim;
+    params.nin_dim = PQuad::nin_dim;
 
-    // // Custom Initialization
+    // Instantiate algorithm
+    Algo pso(params);
+
+    // // Custom Initialization for faster convergence
     // algevo::tools::rgen_gauss_t rgen(0., 0.001);
     // Eigen::VectorXd x0(6);
     // x0 << 1., 2., 0., 0., 0., 0.;
     // Eigen::VectorXd xN(6);
     // xN << 0., 1., 0., 0., 0., 0.;
 
-    // for (unsigned int k = 0; k < ParamsPSO::pop_size; k++) {
+    // for (unsigned int k = 0; k < params.pop_size; k++) {
     //     for (unsigned int i = 0; i < PQuad::T * PQuad::Ad; i++) {
-    //         pso.population()(k, i) = 0. + rgen.rand();
+    //         pso.population()(i, k) = 0. + rgen.rand();
     //     }
 
     //     for (unsigned int i = 0; i < (PQuad::T - 1); i++) {
     //         double p = (i + 1) / static_cast<double>(PQuad::T);
     //         Eigen::VectorXd x = x0 + p * (xN - x0);
     //         for (unsigned int d = 0; d < PQuad::D; d++) {
-    //             pso.population()(k, PQuad::T + i * PQuad::D + d) = x(d) + rgen.rand();
+    //             pso.population()(PQuad::T + i * PQuad::D + d, k) = x(d) + rgen.rand();
     //         }
     //     }
     // }
 
-    for (unsigned int i = 0; i < (1000 / ParamsPSO::pop_size); i++) {
-        pso.step();
-        // std::cout << i << ": " << pso.best_value() << std::endl;
-        std::cout << pso.nfe() << " ";
-        s.eval_all(pso.best(), true);
+    // Run a few iterations!
+    for (unsigned int i = 0; i < (1000 / params.pop_size); i++) {
+        auto log = pso.step();
+        std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> " << log.best_cv << std::endl;
     }
-    std::cout << pso.nfe() << " ";
-    s.eval_all(pso.best(), true);
-    std::cout << "Best: " << pso.best() << std::endl;
 
     // std::cout << "STD-DEV" << std::endl;
-    // Eigen::VectorXd std_dev = ((pso.population().array().rowwise() - pso.population().array().colwise().mean()).square().colwise().sum() / (ParamsPSO::dim - 1)).sqrt();
+    // Eigen::VectorXd std_dev = ((pso.population().array().colwise() - pso.population().array().rowwise().mean()).square().rowwise().sum() / (params.dim - 1)).sqrt();
     // std::cout << std_dev.transpose() << std::endl;
     return 0;
 }

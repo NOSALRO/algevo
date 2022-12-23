@@ -232,7 +232,6 @@ struct TowrFit {
             nlp.PrintCurrent(); // view variable-set, constraint violations, indices,...
             cout << fixed;
 
-            std::cout << f << " -> " << cv << std::endl;
             // cout << "\n====================\nMonoped trajectory:\n====================\n";
 
             // double t = 0.0;
@@ -267,62 +266,48 @@ struct TowrFit {
         return {-f, -grad, c, C, g, G, cv};
     }
 };
+
+// Typedefs
 using Towr = TowrFit<double>;
-
-struct ParamsPSO {
-    static constexpr int seed = -1;
-    static constexpr unsigned int dim = Towr::dim;
-    static constexpr unsigned int pop_size = 20;
-    static constexpr unsigned int num_neighbors = 4;
-    static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
-    static constexpr double max_value = Towr::max_value;
-    static constexpr double min_value = Towr::min_value;
-    static constexpr double max_vel = 100.;
-    static constexpr double min_vel = -100.;
-
-    // Constraints
-    static constexpr unsigned int neq_dim = Towr::neq_dim;
-    static constexpr unsigned int nin_dim = Towr::nin_dim;
-
-    static constexpr double chi = 0.729;
-    static constexpr double c1 = 2.05;
-    static constexpr double c2 = 2.05;
-    static constexpr double u = 0.5;
-
-    static constexpr bool noisy_velocity = true;
-    static constexpr double mu_noise = 0.;
-    static constexpr double sigma_noise = 0.0001;
-
-    static constexpr double qp_alpha = 1.;
-    static constexpr double qp_cr = 0.5;
-    static constexpr double qp_weight = 1.;
-    static constexpr double epsilon_comp = 1e-4;
-};
+using Algo = algevo::algo::ParticleSwarmOptimizationGrad<Towr>;
+using Params = Algo::Params;
 
 int main()
 {
-    Towr s(true);
-    algevo::algo::ParticleSwarmOptimizationGrad<ParamsPSO, Towr> pso;
+    // Set parameters
+    Params params;
+    params.dim = Towr::dim;
+    params.pop_size = 20;
+    params.num_neighbors = 4;
+    params.max_value = Algo::x_t::Constant(params.dim, Towr::max_value);
+    params.min_value = Algo::x_t::Constant(params.dim, Towr::min_value);
+    params.max_vel = Algo::x_t::Constant(params.dim, 100.);
+    params.min_vel = Algo::x_t::Constant(params.dim, -100.);
+    params.qp_alpha = 1.;
+    params.qp_cr = 0.5;
+    params.neq_dim = Towr::neq_dim;
+    params.nin_dim = Towr::nin_dim;
 
+    // Instantiate algorithm
+    Algo pso(params);
+
+    Towr s(true);
+    // Custom Initialization for faster convergence
     algevo::tools::rgen_gauss_t rgen(0., 0.001);
-    // Custom Initialization
-    for (unsigned int k = 0; k < ParamsPSO::pop_size; k++) {
-        pso.population().row(k) = s.nlp.GetVariableValues();
+    for (unsigned int k = 0; k < params.pop_size; k++) {
+        pso.population().col(k) = s.nlp.GetVariableValues();
         if (k > 0) {
-            for (unsigned int i = 0; i < ParamsPSO::dim; i++)
-                pso.population()(k, i) += rgen.rand();
+            for (unsigned int i = 0; i < params.dim; i++)
+                pso.population()(i, k) += rgen.rand();
         }
     }
 
-    for (unsigned int i = 0; i < (500 / ParamsPSO::pop_size); i++) {
-        pso.step();
-        // std::cout << i << ": " << pso.best_value() << std::endl;
-        std::cout << pso.nfe() << " " << pso.best_value() << " ";
-        s.eval_all(pso.best(), 1);
-        // std::cin.get();
+    // Run a few iterations!
+    for (unsigned int i = 0; i < (500 / params.pop_size); i++) {
+        auto log = pso.step();
+        std::cout << log.iterations << "(" << log.func_evals << "): " << -log.best_value << " -> " << log.best_cv << std::endl;
+        s.eval_all(log.best, 1);
     }
-    std::cout << pso.nfe() << " ";
-    s.eval_all(pso.best(), 1);
-    std::cout << "Best: " << pso.best() << std::endl;
+
     return 0;
 }

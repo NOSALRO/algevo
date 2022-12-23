@@ -248,72 +248,56 @@ struct DoubleIntegrator {
     }
 };
 
+// Typedefs
 using DoubleInt = DoubleIntegrator<double>;
-
-struct ParamsPSO {
-    static constexpr int seed = -1;
-    static constexpr unsigned int dim = DoubleInt::dim;
-    static constexpr unsigned int pop_size = 20;
-    static constexpr unsigned int num_neighbors = 4;
-    static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
-    static constexpr double max_value = DoubleInt::max_value;
-    static constexpr double min_value = DoubleInt::min_value;
-    static constexpr double max_vel = 100.;
-    static constexpr double min_vel = -100.;
-
-    // Constraints
-    static constexpr unsigned int neq_dim = DoubleInt::neq_dim;
-    static constexpr unsigned int nin_dim = DoubleInt::nin_dim;
-
-    static constexpr double chi = 0.729;
-    static constexpr double c1 = 2.05;
-    static constexpr double c2 = 2.05;
-    static constexpr double u = 0.5;
-
-    static constexpr bool noisy_velocity = true;
-    static constexpr double mu_noise = 0.;
-    static constexpr double sigma_noise = 0.0001;
-
-    static constexpr double qp_alpha = 1.;
-    static constexpr double qp_cr = 0.9;
-    static constexpr double qp_weight = 1.;
-    static constexpr double epsilon_comp = 1e-4;
-};
+using Algo = algevo::algo::ParticleSwarmOptimizationGrad<DoubleInt>;
+using Params = Algo::Params;
 
 int main()
 {
-    DoubleInt s;
-    algevo::algo::ParticleSwarmOptimizationGrad<ParamsPSO, DoubleInt> pso;
+    // Set parameters
+    Params params;
+    params.dim = DoubleInt::dim;
+    params.pop_size = 20;
+    params.num_neighbors = 4;
+    params.max_value = Algo::x_t::Constant(params.dim, DoubleInt::max_value);
+    params.min_value = Algo::x_t::Constant(params.dim, DoubleInt::min_value);
+    params.max_vel = Algo::x_t::Constant(params.dim, 100.);
+    params.min_vel = Algo::x_t::Constant(params.dim, -100.);
+    params.qp_alpha = 1.;
+    params.qp_cr = 0.9;
+    params.neq_dim = DoubleInt::neq_dim;
+    params.nin_dim = DoubleInt::nin_dim;
 
-    // // Custom Initialization
+    // Instantiate algorithm
+    Algo pso(params);
+
+    // // Custom Initialization for faster convergence
     // algevo::tools::rgen_gauss_t rgen(0., 0.001);
     // Eigen::VectorXd x0(2);
     // x0 << 1., 0.;
     // Eigen::VectorXd xN(2);
     // xN << 0., 0.;
 
-    // for (unsigned int k = 0; k < ParamsPSO::pop_size; k++) {
+    // for (unsigned int k = 0; k < params.pop_size; k++) {
     //     for (unsigned int i = 0; i < DoubleInt::T * DoubleInt::Ad; i++) {
-    //         pso.population()(k, i) = 0. + rgen.rand();
+    //         pso.population()(i, k) = 0. + rgen.rand();
     //     }
 
     //     for (unsigned int i = 0; i < (DoubleInt::T - 1); i++) {
     //         double p = (i + 1) / static_cast<double>(DoubleInt::T);
     //         Eigen::VectorXd x = x0 + p * (xN - x0);
     //         for (unsigned int d = 0; d < DoubleInt::D; d++) {
-    //             pso.population()(k, DoubleInt::T + i * DoubleInt::D + d) = x(d) + rgen.rand();
+    //             pso.population()(DoubleInt::T + i * DoubleInt::D + d, k) = x(d) + rgen.rand();
     //         }
     //     }
     // }
 
-    for (unsigned int i = 0; i < (1000 / ParamsPSO::pop_size); i++) {
-        pso.step();
-        // std::cout << i << ": " << pso.best_value() << std::endl;
-        std::cout << pso.nfe() << " ";
-        s.eval_all(pso.best(), true);
+    // Run a few iterations!
+    for (unsigned int i = 0; i < (1000 / params.pop_size); i++) {
+        auto log = pso.step();
+        std::cout << log.iterations << "(" << log.func_evals << "): " << -log.best_value << " -> " << log.best_cv << std::endl;
     }
-    std::cout << pso.nfe() << " ";
-    s.eval_all(pso.best(), true);
-    std::cout << "Best: " << pso.best() << std::endl;
+
     return 0;
 }
