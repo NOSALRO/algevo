@@ -25,12 +25,13 @@ namespace algevo {
 
             struct Params {
                 int seed = -1;
-                double cr = 0.9;
-                double f = 0.8;
-                double lambda = 0.8;
+                Scalar cr = static_cast<Scalar>(0.9);
+                Scalar f = static_cast<Scalar>(0.8);
+                Scalar lambda = static_cast<Scalar>(0.8);
 
                 unsigned int dim = 0;
                 unsigned int pop_size = 0;
+
                 x_t min_value;
                 x_t max_value;
             };

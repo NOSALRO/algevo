@@ -4,36 +4,31 @@
 
 #include "problems.hpp"
 
+// Typedefs
 using FitSphere = algevo::FitSphere<>;
-
-struct Params {
-    static constexpr int seed = -1;
-    static constexpr unsigned int dim = FitSphere::dim;
-    static constexpr unsigned int pop_size = (dim > 100) ? dim : 128;
-    static constexpr unsigned int num_neighbors = 10;
-    static constexpr unsigned int num_neighborhoods = std::floor(pop_size / static_cast<double>(num_neighbors));
-    static constexpr double max_value = FitSphere::max_value;
-    static constexpr double min_value = FitSphere::min_value;
-    static constexpr double max_vel = 1.;
-    static constexpr double min_vel = -1.;
-
-    static constexpr double chi = 0.729;
-    static constexpr double c1 = 2.05;
-    static constexpr double c2 = 2.05;
-    static constexpr double u = 0.5;
-
-    static constexpr bool noisy_velocity = true;
-    static constexpr double mu_noise = 0.;
-    static constexpr double sigma_noise = 0.0001;
-};
+using Algo = algevo::algo::ParticleSwarmOptimization<FitSphere>;
+using Params = Algo::Params;
 
 int main()
 {
-    algevo::algo::ParticleSwarmOptimization<Params, FitSphere> pso;
+    // Set parameters
+    Params params;
+    params.dim = FitSphere::dim;
+    params.pop_size = (params.dim > 100) ? params.dim : 128;
+    params.num_neighbors = 10;
+    params.max_value = Algo::x_t::Constant(params.dim, FitSphere::max_value);
+    params.min_value = Algo::x_t::Constant(params.dim, FitSphere::min_value);
+    params.max_vel = Algo::x_t::Constant(params.dim, 1.);
+    params.min_vel = Algo::x_t::Constant(params.dim, -1.);
 
-    for (unsigned int i = 0; i < 2000; i++) {
-        pso.step();
-        std::cout << i << ": " << pso.best_value() << std::endl;
+    // Instantiate algorithm
+    Algo pso(params);
+
+    // Run a few iterations!
+    for (unsigned int i = 0; i < 500; i++) {
+        auto log = pso.step();
+        std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << std::endl;
     }
+
     return 0;
 }
