@@ -166,7 +166,7 @@ namespace algevo {
                     x_t p(_params.dim_features);
                     std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i));
                     // clip in [min,max]
-                    for (unsigned int j = 0; j < _params.dim; j++) {
+                    for (unsigned int j = 0; j < _params.dim_features; j++) {
                         p(j) = std::max(_params.min_feat[j], std::min(_params.max_feat[j], p(j)));
                     }
                     _batch_features.col(i) = p;
