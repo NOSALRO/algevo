@@ -119,6 +119,9 @@ namespace algevo {
             const mat_t& centroids() const { return _centroids; }
             mat_t& centroids() { return _centroids; }
 
+            const mat_t& features() const { return _archive_features; }
+            mat_t& features() { return _archive_features; }
+
             const x_t& archive_fit() const { return _archive_fit; }
 
             double qd_score() const
@@ -128,6 +131,15 @@ namespace algevo {
                     if (_archive_fit(i) != -std::numeric_limits<Scalar>::max())
                         qd += _archive_fit(i);
                 return qd;
+            }
+
+            unsigned int archive_size() const
+            {
+                unsigned int sz = 0;
+                for (int i = 0; i < _params.num_cells; i++)
+                    if (_archive_features(i) != -std::numeric_limits<Scalar>::max())
+                        sz++;
+                return sz;
             }
 
             IterationLog step()
@@ -145,7 +157,7 @@ namespace algevo {
                     for (unsigned int i = 0; i < _params.pop_size; i++) {
                         _batch(j, i) += _rgen_gauss.rand() * _params.sigma_1;
                         // clip in [min,max]
-                        _batch(j, i) = std::max(_params.min_value[j], std::min(_params.max_value[j], _batch(i, j)));
+                        _batch(j, i) = std::max(_params.min_value[j], std::min(_params.max_value[j], _batch(j, i)));
                     }
 
                 // evaluate the batch
@@ -183,6 +195,7 @@ namespace algevo {
                     if (_new_rank[i] != -1) {
                         _archive.col(_new_rank[i]) = _batch.col(i);
                         _archive_fit(_new_rank[i]) = _batch_fit(i);
+                        _archive_features.col(_new_rank[i]) = _batch_features.col(i);
                     }
                 }
 
@@ -206,6 +219,7 @@ namespace algevo {
             // Actual population (current values)
             mat_t _archive;
             x_t _archive_fit;
+            mat_t _archive_features;
 
             // Centroids
             mat_t _centroids;
@@ -228,6 +242,7 @@ namespace algevo {
             void _allocate_data()
             {
                 _archive = mat_t(_params.dim, _params.num_cells);
+                _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
                 _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
 
                 _batch = mat_t(_params.dim, _params.pop_size);
