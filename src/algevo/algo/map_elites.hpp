@@ -127,7 +127,7 @@ namespace algevo {
             double qd_score() const
             {
                 double qd = 0;
-                for (int i = 0; i < _params.num_cells; i++)
+                for (unsigned int i = 0; i < _params.num_cells; i++)
                     if (_archive_fit(i) != -std::numeric_limits<Scalar>::max())
                         qd += _archive_fit(i);
                 return qd;
@@ -136,9 +136,10 @@ namespace algevo {
             unsigned int archive_size() const
             {
                 unsigned int sz = 0;
-                for (int i = 0; i < _params.num_cells; i++)
-                    if (_archive_features(i) != -std::numeric_limits<Scalar>::max())
+                for (unsigned int i = 0; i < _params.num_cells; i++) {
+                    if ((_archive_features.col(i).array() != -std::numeric_limits<Scalar>::max()).all())
                         sz++;
+                }
                 return sz;
             }
 

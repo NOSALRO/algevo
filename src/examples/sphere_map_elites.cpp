@@ -39,7 +39,12 @@ int main()
 
     for (unsigned int i = 0; i < 500; i++) {
         auto log = map_elites.step();
-        std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << std::endl;
+        std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << map_elites.archive_size() << std::endl;
+        // const auto& archive = map_elites.features();
+        // const auto& centroids = map_elites.centroids();
+        // for (unsigned int j = 0; j < archive.cols(); j++) {
+        //     std::cout << "    " << j << ": " << archive.col(j).transpose() << " -> " << centroids.col(j).transpose() << std::endl;
+        // }
     }
     return 0;
 }
