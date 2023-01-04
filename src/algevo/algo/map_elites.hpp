@@ -113,14 +113,63 @@ namespace algevo {
             const mat_t& population() const { return _archive; }
             mat_t& population() { return _archive; }
 
-            const mat_t& archive() const { return _archive; }
-            mat_t& archive() { return _archive; }
+            mat_t archive() const
+            {
+                const unsigned int archive_sz = archive_size();
+                mat_t archive(_params.dim, archive_sz);
+                if (archive_sz > 0) {
+                    unsigned int idx = 0;
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        if (valid_individual(i)) {
+                            archive.col(idx++) = _archive.col(i);
+                        }
+                    }
+                }
+                return archive;
+            }
 
             const mat_t& centroids() const { return _centroids; }
             mat_t& centroids() { return _centroids; }
 
-            const mat_t& features() const { return _archive_features; }
-            mat_t& features() { return _archive_features; }
+            const mat_t& all_features() const { return _archive_features; }
+            mat_t& all_features() { return _archive_features; }
+
+            mat_t features() const
+            {
+                const unsigned int archive_sz = archive_size();
+                mat_t features(_params.dim_features, archive_sz);
+                if (archive_sz > 0) {
+                    unsigned int idx = 0;
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        if (valid_individual(i)) {
+                            features.col(idx++) = _archive_features.col(i);
+                        }
+                    }
+                }
+                return features;
+            }
+
+            std::pair<mat_t, mat_t> archive_features() const
+            {
+                const unsigned int archive_sz = archive_size();
+                mat_t features(_params.dim_features, archive_sz);
+                mat_t archive(_params.dim, archive_sz);
+                if (archive_sz > 0) {
+                    unsigned int idx = 0;
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        if (valid_individual(i)) {
+                            features.col(idx) = _archive_features.col(i);
+                            archive.col(idx++) = _archive.col(i);
+                        }
+                    }
+                }
+                return {archive, features};
+            }
+
+            bool valid_individual(unsigned int i) const
+            {
+                return (_archive_features.col(i).array() != -std::numeric_limits<Scalar>::max()).all();
+            }
 
             const x_t& archive_fit() const { return _archive_fit; }
 
@@ -137,7 +186,7 @@ namespace algevo {
             {
                 unsigned int sz = 0;
                 for (unsigned int i = 0; i < _params.num_cells; i++) {
-                    if ((_archive_features.col(i).array() != -std::numeric_limits<Scalar>::max()).all())
+                    if (valid_individual(i))
                         sz++;
                 }
                 return sz;
