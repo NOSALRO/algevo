@@ -195,8 +195,16 @@ namespace algevo {
             IterationLog step()
             {
                 // Uniform random selection
-                for (unsigned int i = 0; i < _params.pop_size * 2; i++)
+                for (unsigned int i = 0; i < _params.pop_size * 2; i++) {
                     _batch_ranks[i] = _rgen_ranks.rand(); // yes, from all the map!
+                    // if not a filled niche, resample
+                    if (!valid_individual(_batch_ranks[i])) {
+                        for (unsigned int j = 0; j < _params.dim; j++) {
+                            Scalar range = (_params.max_value[j] - _params.min_value[j]);
+                            _archive(j, _batch_ranks[i]) = _rgen.rand() * range + _params.min_value[j];
+                        }
+                    }
+                }
 
                 // Crossover - line variation
                 for (unsigned int i = 0; i < _params.pop_size; i++)
