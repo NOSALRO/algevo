@@ -380,7 +380,7 @@ namespace algevo {
                 }
             }
 
-            bool _is_equal(double a, double b)
+            bool _is_equal(Scalar a, Scalar b)
             {
                 return std::abs(a - b) <= _params.epsilon_comp;
             }
