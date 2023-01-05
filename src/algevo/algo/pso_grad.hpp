@@ -6,6 +6,7 @@
 #include <array>
 #include <limits>
 
+#include <algevo/tools/limit.hpp>
 #include <algevo/tools/parallel.hpp>
 #include <algevo/tools/random.hpp>
 
@@ -71,6 +72,8 @@ namespace algevo {
 
                 x_t min_vel;
                 x_t max_vel;
+
+                bool use_classical_clamp = false;
             };
 
             struct IterationLog {
@@ -368,7 +371,10 @@ namespace algevo {
 
                 // Clamp velocities inside min/max
                 for (unsigned int j = 0; j < _params.dim; j++) {
-                    _velocities(j, i) = std::max(_params.min_vel[j], std::min(_params.max_vel[j], _velocities(j, i)));
+                    if (_params.use_classical_clamp)
+                        _velocities(j, i) = tools::clamp(_velocities(j, i), _params.min_vel[j], _params.max_vel[j]);
+                    else
+                        _velocities(j, i) = tools::bounce_back(_velocities(j, i), _params.min_vel[j], _params.max_vel[j]);
                 }
 
                 // Update population
@@ -376,7 +382,10 @@ namespace algevo {
 
                 // Clamp inside min/max
                 for (unsigned int j = 0; j < _params.dim; j++) {
-                    _population(j, i) = std::max(_params.min_value[j], std::min(_params.max_value[j], _population(j, i)));
+                    if (_params.use_classical_clamp)
+                        _population(j, i) = tools::clamp(_population(j, i), _params.min_value[j], _params.max_value[j]);
+                    else
+                        _population(j, i) = tools::bounce_back(_population(j, i), _params.min_value[j], _params.max_value[j]);
                 }
             }
 

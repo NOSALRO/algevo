@@ -6,6 +6,7 @@
 #include <array>
 #include <limits>
 
+#include <algevo/tools/limit.hpp>
 #include <algevo/tools/parallel.hpp>
 #include <algevo/tools/random.hpp>
 
@@ -66,6 +67,8 @@ namespace algevo {
                 x_t max_feat;
 
                 mat_t centroids;
+
+                bool use_classical_clamp = false;
             };
 
             struct IterationLog {
@@ -215,7 +218,10 @@ namespace algevo {
                     for (unsigned int j = 0; j < _params.dim; j++) {
                         _batch(j, i) += _rgen_gauss.rand() * _params.sigma_1;
                         // clip in [min,max]
-                        _batch(j, i) = std::max(_params.min_value[j], std::min(_params.max_value[j], _batch(j, i)));
+                        if (_params.use_classical_clamp)
+                            _batch(j, i) = tools::clamp(_batch(j, i), _params.min_value[j], _params.max_value[j]);
+                        else
+                            _batch(j, i) = tools::bounce_back(_batch(j, i), _params.min_value[j], _params.max_value[j]);
                     }
 
                 // evaluate the batch
@@ -225,7 +231,10 @@ namespace algevo {
                     std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i));
                     // clip in [min,max]
                     for (unsigned int j = 0; j < _params.dim_features; j++) {
-                        p(j) = std::max(_params.min_feat[j], std::min(_params.max_feat[j], p(j)));
+                        if (_params.use_classical_clamp)
+                            p(j) = tools::clamp(p(j), _params.min_feat[j], _params.max_feat[j]);
+                        else
+                            p(j) = tools::bounce_back(p(j), _params.min_feat[j], _params.max_feat[j]);
                     }
                     _batch_features.col(i) = p;
                 });

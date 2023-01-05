@@ -6,6 +6,7 @@
 #include <array>
 #include <limits>
 
+#include <algevo/tools/limit.hpp>
 #include <algevo/tools/parallel.hpp>
 #include <algevo/tools/random.hpp>
 
@@ -34,6 +35,8 @@ namespace algevo {
 
                 x_t min_value;
                 x_t max_value;
+
+                bool use_classical_clamp = false;
             };
 
             struct IterationLog {
@@ -163,7 +166,11 @@ namespace algevo {
                         Scalar v = 0.;
                         if (_log.iterations > 0)
                             v = l * (_best(j) - _population(j, i));
-                        y(j) = std::min(_params.max_value[j], std::max(_params.min_value[j], _population(j, i) + v + f * (_population(j, i1) - _population(j, i2))));
+                        v = _population(j, i) + v + f * (_population(j, i1) - _population(j, i2));
+                        if (_params.use_classical_clamp)
+                            y(j) = tools::clamp(v, _params.min_value[j], _params.max_value[j]);
+                        else
+                            y(j) = tools::bounce_back(v, _params.min_value[j], _params.max_value[j]);
                     }
                 }
 
