@@ -56,6 +56,8 @@ namespace algevo {
                 unsigned int pop_size = 0;
                 unsigned int num_cells = 0;
 
+                Scalar exploration_percentage = 0.1;
+
                 Scalar sigma_1 = static_cast<Scalar>(0.005);
                 Scalar sigma_2 = static_cast<Scalar>(0.3);
 
@@ -199,8 +201,15 @@ namespace algevo {
             {
                 // Uniform random selection
                 for (unsigned int i = 0; i < _params.pop_size * 2; i++) {
-                    _batch_ranks[i] = _rgen_ranks.rand(); // yes, from all the map!
-                    // if not a filled niche, resample
+                    if (_log.valid_individuals.size() > _params.exploration_percentage * _params.num_cells) { // if we have enough filled niches, we select among them
+                        unsigned int idx = _log.valid_individuals.size();
+                        while (idx >= _log.valid_individuals.size())
+                            idx = _rgen_ranks.rand();
+                        _batch_ranks[i] = _log.valid_individuals[idx];
+                    }
+                    else
+                        _batch_ranks[i] = _rgen_ranks.rand(); // else we select from all the map!
+                    // if not a filled niche, resample to increase exploration
                     if (!valid_individual(_batch_ranks[i])) {
                         for (unsigned int j = 0; j < _params.dim; j++) {
                             Scalar range = (_params.max_value[j] - _params.min_value[j]);
