@@ -244,6 +244,10 @@ namespace algevo {
                             best_i = j;
                         }
                     }
+
+                    // This is the same as the for loop, but shorter
+                    // (_centroids.colwise() - _batch_features.col(i)).colwise().squaredNorm().minCoeff(&best_i);
+
                     if (_batch_fit(i) > _archive_fit(best_i))
                         _new_rank[i] = best_i;
                 });
