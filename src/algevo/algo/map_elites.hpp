@@ -74,6 +74,9 @@ namespace algevo {
 
                 x_t best;
                 Scalar best_value;
+
+                unsigned int archive_size = 0;
+                std::vector<unsigned int> valid_individuals;
             };
 
             MapElites(const Params& params) : _params(params), _rgen(0., 1., params.seed), _rgen_ranks(0, params.num_cells - 1, params.seed)
@@ -267,6 +270,15 @@ namespace algevo {
                 int best_i;
                 _log.best_value = _archive_fit.maxCoeff(&best_i);
                 _log.best = _archive.col(best_i);
+                _log.archive_size = archive_size();
+                _log.valid_individuals.resize(_log.archive_size);
+                {
+                    unsigned int idx = 0;
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        if (valid_individual(i))
+                            _log.valid_individuals[idx++] = i;
+                    }
+                }
 
                 return _log;
             }
