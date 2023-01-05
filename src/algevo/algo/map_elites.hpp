@@ -173,9 +173,9 @@ namespace algevo {
 
             const x_t& archive_fit() const { return _archive_fit; }
 
-            double qd_score() const
+            Scalar qd_score() const
             {
-                double qd = 0;
+                Scalar qd = 0;
                 for (unsigned int i = 0; i < _params.num_cells; i++)
                     if (_archive_fit(i) != -std::numeric_limits<Scalar>::max())
                         qd += _archive_fit(i);
@@ -236,9 +236,9 @@ namespace algevo {
                     // search for the closest centroid / the grid
                     int best_i = -1;
                     // TO-DO: Do not iterate over all cells; make a tree or something
-                    double best_dist = std::numeric_limits<Scalar>::max();
+                    Scalar best_dist = std::numeric_limits<Scalar>::max();
                     for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
-                        double d = (_batch_features.col(i) - _centroids.col(j)).squaredNorm();
+                        Scalar d = (_batch_features.col(i) - _centroids.col(j)).squaredNorm();
                         if (d < best_dist) {
                             best_dist = d;
                             best_i = j;
