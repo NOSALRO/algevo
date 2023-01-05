@@ -51,9 +51,9 @@ namespace algevo {
                 assert(_params.min_value.size() == _params.dim && _params.max_value.size() == _params.dim && "Min/max values dimensions should be the same as the problem dimensions!");
                 _allocate_data();
 
-                for (unsigned int j = 0; j < _params.dim; j++) {
-                    Scalar range = (_params.max_value[j] - _params.min_value[j]);
-                    for (unsigned int i = 0; i < _params.pop_size; i++) {
+                for (unsigned int i = 0; i < _params.pop_size; i++) {
+                    for (unsigned int j = 0; j < _params.dim; j++) {
+                        Scalar range = (_params.max_value[j] - _params.min_value[j]);
                         _population(j, i) = _rgen.rand() * range + _params.min_value[j];
                     }
                 }

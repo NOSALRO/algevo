@@ -67,10 +67,10 @@ namespace algevo {
 
                 _allocate_data();
 
-                for (unsigned int j = 0; j < _params.dim; j++) {
-                    Scalar range = (_params.max_value[j] - _params.min_value[j]);
-                    Scalar range_vel = (_params.max_vel[j] - _params.min_vel[j]);
-                    for (unsigned int i = 0; i < _params.pop_size; i++) {
+                for (unsigned int i = 0; i < _params.pop_size; i++) {
+                    for (unsigned int j = 0; j < _params.dim; j++) {
+                        Scalar range = (_params.max_value[j] - _params.min_value[j]);
+                        Scalar range_vel = (_params.max_vel[j] - _params.min_vel[j]);
                         _population(j, i) = _rgen.rand() * range + _params.min_value[j];
                         _velocities(j, i) = _rgen.rand() * range_vel + _params.min_vel[j];
                     }

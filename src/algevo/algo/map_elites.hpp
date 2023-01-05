@@ -89,18 +89,18 @@ namespace algevo {
                 _allocate_data();
 
                 // Initialize random archive
-                for (unsigned int j = 0; j < _params.dim; j++) {
-                    Scalar range = (_params.max_value[j] - _params.min_value[j]);
-                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                for (unsigned int i = 0; i < _params.num_cells; i++) {
+                    for (unsigned int j = 0; j < _params.dim; j++) {
+                        Scalar range = (_params.max_value[j] - _params.min_value[j]);
                         _archive(j, i) = _rgen.rand() * range + _params.min_value[j];
                     }
                 }
 
                 // Initialize random centroids if needed
                 if (_params.centroids.size() == 0) {
-                    for (unsigned int j = 0; j < _params.dim_features; j++) {
-                        Scalar range = (_params.max_feat[j] - _params.min_feat[j]);
-                        for (unsigned int i = 0; i < _params.num_cells; i++) {
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        for (unsigned int j = 0; j < _params.dim_features; j++) {
+                            Scalar range = (_params.max_feat[j] - _params.min_feat[j]);
                             _centroids(j, i) = _rgen.rand() * range + _params.min_feat[j];
                         }
                     }
@@ -211,8 +211,8 @@ namespace algevo {
                     _batch.col(i) = _archive.col(_batch_ranks[i * 2]) + _params.sigma_2 * _rgen_gauss.rand() * (_archive.col(_batch_ranks[i * 2]) - _archive.col(_batch_ranks[i * 2 + 1]));
 
                 // Gaussian mutation
-                for (unsigned int j = 0; j < _params.dim; j++)
-                    for (unsigned int i = 0; i < _params.pop_size; i++) {
+                for (unsigned int i = 0; i < _params.pop_size; i++)
+                    for (unsigned int j = 0; j < _params.dim; j++) {
                         _batch(j, i) += _rgen_gauss.rand() * _params.sigma_1;
                         // clip in [min,max]
                         _batch(j, i) = std::max(_params.min_value[j], std::min(_params.max_value[j], _batch(j, i)));
