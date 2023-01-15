@@ -38,8 +38,13 @@ namespace algevo {
                 x_t init_mu;
                 x_t init_std;
 
+                population_t init_elites;
+
                 Scalar decrease_pop_factor = 1.;
                 Scalar fraction_elites_reused = 0.;
+
+                Scalar prob_keep_previous = 0.;
+                unsigned int elem_size = 0;
             };
 
             struct IterationLog {
@@ -145,15 +150,37 @@ namespace algevo {
 
             void _generate_population(bool inject_mean_to_population)
             {
-                // Generate random gaussian values from pure Normal distribution (mean=0, std=1)
-                for (unsigned int i = 0; i < _params.pop_size; i++) {
-                    for (unsigned int j = 0; j < _params.dim; j++) {
-                        _population(j, i) = _rgen.rand();
+                static thread_local rgen_scalar_t rgen(static_cast<Scalar>(0.), static_cast<Scalar>(1.), _params.seed);
+
+                // Generate data with MPC actions in mind (sticky actions!)
+                if (_params.prob_keep_previous > 0. && _params.elem_size) {
+                    Scalar prob = _params.prob_keep_previous;
+                    for (unsigned int i = 0; i < _params.pop_size; i++) {
+                        for (unsigned int j = 0; j < _params.dim; j += _params.elem_size) {
+                            if (j > 0 && rgen.rand() < prob) { // keep previous
+                                _population.block(j, i, _params.elem_size, 1) = _population.block(j - _params.elem_size, i, _params.elem_size, 1);
+                                prob *= prob;
+                            }
+                            else {
+                                prob = _params.prob_keep_previous;
+                                for (unsigned int k = 0; k < _params.elem_size; k++) {
+                                    _population(j + k, i) = _rgen.rand();
+                                }
+                            }
+                        }
                     }
                 }
+                else { // classic generation of population
+                    // Generate random gaussian values from pure Normal distribution (mean=0, std=1)
+                    for (unsigned int i = 0; i < _params.pop_size; i++) {
+                        for (unsigned int j = 0; j < _params.dim; j++) {
+                            _population(j, i) = _rgen.rand();
+                        }
+                    }
 
-                // Convert them into a population: mu_{i+1} = mu_i + sigma_i * random_eps
-                _population = (_population.array().colwise() * _std_devs.array()).colwise() + _mu.array();
+                    // Convert them into a population: mu_{i+1} = mu_i + sigma_i * random_eps
+                    _population = (_population.array().colwise() * _std_devs.array()).colwise() + _mu.array();
+                }
 
                 // Clamp inside min/max
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
@@ -162,7 +189,11 @@ namespace algevo {
                     }
                 }
 
-                // Inject previous elites
+                // Inject elites form previous run
+                if (_log.iterations == 0 && _params.init_elites.rows() == _params.dim)
+                    _population.block(0, 0, _params.dim, _params.init_elites.cols()) = _params.init_elites;
+
+                // Inject elites from previous inner iteration
                 if (_log.iterations > 0)
                     for (unsigned int i = 0; i < _elites_reuse_size; i++)
                         _population.col(i) = _elites.col(i);
