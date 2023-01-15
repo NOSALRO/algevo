@@ -112,6 +112,14 @@ def build(bld):
 
     bld.program(features = 'cxx',
                 install_path = None,
+                source = 'src/examples/sphere_cem.cpp',
+                includes = './src',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'sphere_cem')
+
+    bld.program(features = 'cxx',
+                install_path = None,
                 source = 'src/examples/traj_opt.cpp',
                 includes = './src',
                 uselib = libs,
