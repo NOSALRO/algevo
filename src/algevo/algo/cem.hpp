@@ -37,6 +37,9 @@ namespace algevo {
 
                 x_t init_mu;
                 x_t init_std;
+
+                Scalar decrease_pop_factor = 1.;
+                Scalar fraction_elites_reused = 0.;
             };
 
             struct IterationLog {
@@ -47,7 +50,7 @@ namespace algevo {
                 Scalar best_value;
             };
 
-            CrossEntropyMethod(const Params& params) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites)), _rgen(0., 1., params.seed)
+            CrossEntropyMethod(const Params& params) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites)), _elites_reuse_size(std::max(0u, std::min(_params.num_elites, static_cast<unsigned int>(_params.num_elites * _params.fraction_elites_reused)))), _rgen(0., 1., params.seed)
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim > 0 && "Dimensions not set!");
@@ -60,16 +63,21 @@ namespace algevo {
                 _fit_best = -std::numeric_limits<Scalar>::max();
             }
 
-            IterationLog step()
+            IterationLog step(bool inject_mean_to_population = false)
             {
                 // Generate population
-                _generate_population();
+                _generate_population(inject_mean_to_population);
 
                 // Evaluate population
                 _evaluate_population();
 
                 // Update mean/var
                 _update_distribution();
+
+                // Update params
+                if (_params.decrease_pop_factor > 1.) {
+                    _params.pop_size = std::max(_params.num_elites * 2, static_cast<unsigned int>(_params.pop_size / _params.decrease_pop_factor));
+                }
 
                 // Update iteration log
                 _log.iterations++;
@@ -108,6 +116,7 @@ namespace algevo {
 
             // Data for updates
             const Scalar _update_coeff;
+            const unsigned int _elites_reuse_size;
             population_t _elites;
 
             // Best ever
@@ -134,7 +143,7 @@ namespace algevo {
                 _fit_evals.resize(_params.pop_size);
             }
 
-            void _generate_population()
+            void _generate_population(bool inject_mean_to_population)
             {
                 // Generate random gaussian values from pure Normal distribution (mean=0, std=1)
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
@@ -152,6 +161,13 @@ namespace algevo {
                         _population(j, i) = std::max(_params.min_value[j], std::min(_params.max_value[j], _population(j, i)));
                     }
                 }
+
+                // Inject previous elites
+                if (_log.iterations > 0)
+                    for (unsigned int i = 0; i < _elites_reuse_size; i++)
+                        _population.col(i) = _elites.col(i);
+                if (inject_mean_to_population)
+                    _population.col(_elites_reuse_size) = _mu;
             }
 
             void _evaluate_population()
