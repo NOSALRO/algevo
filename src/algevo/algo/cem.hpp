@@ -38,6 +38,8 @@ namespace algevo {
                 x_t init_mu;
                 x_t init_std;
 
+                x_t min_std;
+
                 population_t init_elites;
 
                 Scalar decrease_pop_factor = 1.;
@@ -230,6 +232,10 @@ namespace algevo {
 
                 // Update mean/variance using the elites!
                 _std_devs = (_update_coeff * (_elites.array().colwise() - _mu.array()).square().rowwise().sum()).sqrt(); // sample variance
+                if (_params.min_std.size() == _std_devs.size()) {
+                    for (unsigned int i = 0; i < _params.dim; i++)
+                        _std_devs(i) = std::max(_params.min_std(i), _std_devs(i));
+                }
                 _mu = _update_coeff * _elites.rowwise().sum(); // sample mean
             }
         };
