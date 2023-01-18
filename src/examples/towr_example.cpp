@@ -6,7 +6,7 @@
 #include <towr/nlp_formulation.h>
 #include <towr/terrain/examples/height_map_examples.h>
 
-#include <algevo/algo/pso_grad.hpp>
+#include <algevo/algo/pso_qp.hpp>
 
 using namespace towr;
 using namespace ifopt;

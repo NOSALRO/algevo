@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <algevo/algo/pso_grad.hpp>
+#include <algevo/algo/pso_qp.hpp>
 
 #include <Eigen/Dense>
 

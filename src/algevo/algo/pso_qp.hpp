@@ -1,5 +1,5 @@
-#ifndef ALGEVO_ALGO_PSO_GRAD_HPP
-#define ALGEVO_ALGO_PSO_GRAD_HPP
+#ifndef ALGEVO_ALGO_PSO_QP_HPP
+#define ALGEVO_ALGO_PSO_QP_HPP
 
 #include <Eigen/Core>
 
