@@ -19,12 +19,9 @@ namespace global {
 template <typename Scalar = double>
 struct NoisyLstSq {
     static constexpr unsigned int dim = 1000;
-    static constexpr unsigned int dim_features = dim;
     static constexpr unsigned int nsamples = 2000;
     static constexpr double max_value = 1.;
     static constexpr double min_value = -1.;
-    static constexpr double max_features_value = 1.;
-    static constexpr double min_features_value = 0.;
     static constexpr unsigned int neq_dim = 0;
     static constexpr unsigned int nin_dim = 0;
 
