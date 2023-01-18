@@ -85,7 +85,7 @@ struct NoisyLstSq {
 
 // Typedefs
 using NoisyLSq = NoisyLstSq<double>;
-using Algo = algevo::algo::ParticleSwarmOptimizationGrad<NoisyLSq>;
+using Algo = algevo::algo::ParticleSwarmOptimizationQP<NoisyLSq>;
 using Params = Algo::Params;
 
 int main()

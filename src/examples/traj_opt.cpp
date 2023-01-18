@@ -250,7 +250,7 @@ struct DoubleIntegrator {
 
 // Typedefs
 using DoubleInt = DoubleIntegrator<double>;
-using Algo = algevo::algo::ParticleSwarmOptimizationGrad<DoubleInt>;
+using Algo = algevo::algo::ParticleSwarmOptimizationQP<DoubleInt>;
 using Params = Algo::Params;
 
 int main()

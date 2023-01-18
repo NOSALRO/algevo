@@ -136,7 +136,7 @@ struct SimplePath {
 
 // Typedefs
 using SPath = SimplePath<double>;
-using Algo = algevo::algo::ParticleSwarmOptimizationGrad<SPath>;
+using Algo = algevo::algo::ParticleSwarmOptimizationQP<SPath>;
 using Params = Algo::Params;
 
 int main()

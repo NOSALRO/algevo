@@ -14,7 +14,7 @@
 namespace algevo {
     namespace algo {
         template <typename Fit, typename Scalar = double>
-        class ParticleSwarmOptimizationGrad {
+        class ParticleSwarmOptimizationQP {
         public:
             using population_t = Eigen::Matrix<Scalar, -1, -1>;
             using mat_t = population_t;
@@ -66,6 +66,9 @@ namespace algevo {
                 Scalar mu_noise = static_cast<Scalar>(0.);
                 Scalar sigma_noise = static_cast<Scalar>(0.0001);
 
+                bool reevaluate_best = false; // re-evaluate best particles, turn on in noisy settings
+                double forgetting_factor = 0.2;
+
                 x_t min_value;
                 x_t max_value;
 
@@ -82,7 +85,7 @@ namespace algevo {
                 Scalar best_cv;
             };
 
-            ParticleSwarmOptimizationGrad(const Params& params) : _params(params), _rgen(0., 1., params.seed)
+            ParticleSwarmOptimizationQP(const Params& params) : _params(params), _rgen(0., 1., params.seed)
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim > 0 && "Dimensions not set!");
@@ -137,6 +140,11 @@ namespace algevo {
                 // Update iteration log
                 _log.iterations++;
                 _log.func_evals += _params.pop_size;
+                if (_params.reevaluate_best && _log.iterations > 0) {
+                    _log.func_evals += _params.pop_size; // we re-evaluated the best_local
+                    _log.func_evals += 1; // we re-evaluated the best ever
+                    _log.func_evals += _num_neighborhoods; // we re-evaluated the best ever per neighbor
+                }
                 _log.best = _best;
                 _log.best_value = _fit_best;
                 _log.best_cv = _cv_best;
@@ -237,6 +245,14 @@ namespace algevo {
                     auto res = _fit_evals[i].eval_all(_population.col(i));
                     Scalar f = std::get<0>(res);
                     Scalar cv = std::get<6>(res);
+
+                    // Re-evaluate best ever if needed (noisy settings)
+                    if (_params.reevaluate_best && _log.iterations > 0) {
+                        auto res_best = _fit_evals[i].eval_all(_best_local.col(i));
+                        _fit_best_local[i] = _fit_best_local[i] + _params.forgetting_factor * (std::get<0>(res_best) - _fit_best_local[i]);
+                        _cv_best_local[i] = _cv_best_local[i] + _params.forgetting_factor * (std::get<6>(res_best) - _cv_best_local[i]);
+                    }
+
                     if (cv < _cv_best_local[i] || (_is_equal(cv, _cv_best_local[i]) && f > _fit_best_local[i])) {
                         _fit_best_local[i] = f;
                         _cv_best_local[i] = cv;
@@ -256,6 +272,23 @@ namespace algevo {
                 });
 
                 // Update neighborhood and global bests
+                // Re-evaluate best ever if needed (noisy settings)
+                if (_params.reevaluate_best && _log.iterations > 0) {
+                    // best ever
+                    {
+                        auto res_best = _fit_evals[0].eval_all(_best);
+                        _fit_best = _fit_best + _params.forgetting_factor * (std::get<0>(res_best) - _fit_best);
+                        _cv_best = _cv_best + _params.forgetting_factor * (std::get<6>(res_best) - _cv_best);
+                    }
+
+                    // best ever per neighborhood
+                    for (unsigned int i = 0; i < _num_neighborhoods; i++) {
+                        auto res_best = _fit_evals[0].eval_all(_best_neighbor.col(i));
+                        _fit_best_neighbor[i] = _fit_best_neighbor[i] + _params.forgetting_factor * (std::get<0>(res_best) - _fit_best_neighbor[i]);
+                        _cv_best_neighbor[i] = _cv_best_neighbor[i] + _params.forgetting_factor * (std::get<6>(res_best) - _cv_best_neighbor[i]);
+                    }
+                }
+
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
                     if (_cv_best_local[i] < _cv_best || (_is_equal(_cv_best_local[i], _cv_best) && _fit_best_local[i] > _fit_best)) {
                         _fit_best = _fit_best_local[i];

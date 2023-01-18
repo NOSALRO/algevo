@@ -200,7 +200,7 @@ struct PlanarQuad {
 
 // Typedefs
 using PQuad = PlanarQuad<double>;
-using Algo = algevo::algo::ParticleSwarmOptimizationGrad<PQuad>;
+using Algo = algevo::algo::ParticleSwarmOptimizationQP<PQuad>;
 using Params = Algo::Params;
 
 int main()

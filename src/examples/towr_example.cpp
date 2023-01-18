@@ -269,7 +269,7 @@ struct TowrFit {
 
 // Typedefs
 using Towr = TowrFit<double>;
-using Algo = algevo::algo::ParticleSwarmOptimizationGrad<Towr>;
+using Algo = algevo::algo::ParticleSwarmOptimizationQP<Towr>;
 using Params = Algo::Params;
 
 int main()
