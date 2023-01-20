@@ -108,6 +108,8 @@ namespace algevo {
             const population_t& population() const { return _population; }
             population_t& population() { return _population; }
 
+            x_t average() const { return _population.rowwise().mean(); }
+
             const population_t& velocities() const { return _velocities; }
             population_t& velocities() { return _velocities; }
 

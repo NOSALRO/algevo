@@ -60,7 +60,6 @@ namespace algevo {
                 Scalar qp_cr = static_cast<Scalar>(0.5);
                 Scalar qp_alpha = static_cast<Scalar>(1.);
                 Scalar qp_weight = static_cast<Scalar>(1.);
-                Scalar epsilon_comp = static_cast<Scalar>(1e-4);
 
                 bool noisy_velocity = true;
                 Scalar mu_noise = static_cast<Scalar>(0.);
@@ -74,6 +73,9 @@ namespace algevo {
 
                 x_t min_vel;
                 x_t max_vel;
+
+                std::vector<std::pair<Scalar, Scalar>> cv_levels = {{0.001, 10.}, {0.1, 20.}, {1., 100.}, {-1., 300.}};
+                std::vector<std::pair<Scalar, Scalar>> cv_gamma_levels = {{1., 1.}, {-1., 2.}};
             };
 
             struct IterationLog {
@@ -154,6 +156,8 @@ namespace algevo {
 
             const population_t& population() const { return _population; }
             population_t& population() { return _population; }
+
+            x_t average() const { return _population.rowwise().mean(); }
 
             const population_t& velocities() const { return _velocities; }
             population_t& velocities() { return _velocities; }
@@ -243,25 +247,10 @@ namespace algevo {
                 // Evaluate individuals
                 tools::parallel_loop(0, _params.pop_size, [this](size_t i) {
                     auto res = _fit_evals[i].eval_all(_population.col(i));
-                    Scalar f = std::get<0>(res);
-                    Scalar cv = std::get<6>(res);
-
-                    // Re-evaluate best ever if needed (noisy settings)
-                    if (_params.reevaluate_best && _log.iterations > 0) {
-                        auto res_best = _fit_evals[i].eval_all(_best_local.col(i));
-                        _fit_best_local[i] = _fit_best_local[i] + _params.forgetting_factor * (std::get<0>(res_best) - _fit_best_local[i]);
-                        _cv_best_local[i] = _cv_best_local[i] + _params.forgetting_factor * (std::get<6>(res_best) - _cv_best_local[i]);
-                    }
-
-                    if (cv < _cv_best_local[i] || (_is_equal(cv, _cv_best_local[i]) && f > _fit_best_local[i])) {
-                        _fit_best_local[i] = f;
-                        _cv_best_local[i] = cv;
-                        _best_local.col(i) = _population.col(i);
-                    }
 
                     // Cache last evaluation for particle update
-                    _eval_data[i].value = f;
-                    _eval_data[i].constraint_violation = cv;
+                    _eval_data[i].value = std::get<0>(res);
+                    _eval_data[i].constraint_violation = std::get<6>(res);
 
                     _eval_data[i].grad = std::get<1>(res);
                     _eval_data[i].eq_violation = std::get<2>(res);
@@ -269,6 +258,28 @@ namespace algevo {
 
                     _eval_data[i].grad_eq = std::get<3>(res);
                     _eval_data[i].grad_ineq = std::get<5>(res);
+
+                    Scalar f = _eval_data[i].value;
+                    Scalar cv = _compute_penalty(_eval_data[i]);
+
+                    // Re-evaluate best ever if needed (noisy settings)
+                    if (_params.reevaluate_best && _log.iterations > 0) {
+                        auto res_best = _fit_evals[i].eval_all(_best_local.col(i));
+                        EvalData data;
+                        data.eq_violation = std::get<2>(res_best);
+                        data.ineq_violation = std::get<4>(res_best);
+
+                        Scalar pen = _compute_penalty(data);
+
+                        _fit_best_local[i] = _fit_best_local[i] + _params.forgetting_factor * (std::get<0>(res_best) - _fit_best_local[i]);
+                        _cv_best_local[i] = _cv_best_local[i] + _params.forgetting_factor * (pen - _cv_best_local[i]);
+                    }
+
+                    if (_compare(f, cv, _fit_best_local[i], _cv_best_local[i], (_log.iterations + 1) * std::sqrt(_log.iterations + 1))) {
+                        _fit_best_local[i] = f;
+                        _cv_best_local[i] = cv;
+                        _best_local.col(i) = _population.col(i);
+                    }
                 });
 
                 // Update neighborhood and global bests
@@ -277,26 +288,38 @@ namespace algevo {
                     // best ever
                     {
                         auto res_best = _fit_evals[0].eval_all(_best);
+                        EvalData data;
+                        data.eq_violation = std::get<2>(res_best);
+                        data.ineq_violation = std::get<4>(res_best);
+
+                        Scalar pen = _compute_penalty(data);
+
                         _fit_best = _fit_best + _params.forgetting_factor * (std::get<0>(res_best) - _fit_best);
-                        _cv_best = _cv_best + _params.forgetting_factor * (std::get<6>(res_best) - _cv_best);
+                        _cv_best = _cv_best + _params.forgetting_factor * (pen - _cv_best);
                     }
 
                     // best ever per neighborhood
                     for (unsigned int i = 0; i < _num_neighborhoods; i++) {
                         auto res_best = _fit_evals[0].eval_all(_best_neighbor.col(i));
+                        EvalData data;
+                        data.eq_violation = std::get<2>(res_best);
+                        data.ineq_violation = std::get<4>(res_best);
+
+                        Scalar pen = _compute_penalty(data);
+
                         _fit_best_neighbor[i] = _fit_best_neighbor[i] + _params.forgetting_factor * (std::get<0>(res_best) - _fit_best_neighbor[i]);
-                        _cv_best_neighbor[i] = _cv_best_neighbor[i] + _params.forgetting_factor * (std::get<6>(res_best) - _cv_best_neighbor[i]);
+                        _cv_best_neighbor[i] = _cv_best_neighbor[i] + _params.forgetting_factor * (pen - _cv_best_neighbor[i]);
                     }
                 }
 
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
-                    if (_cv_best_local[i] < _cv_best || (_is_equal(_cv_best_local[i], _cv_best) && _fit_best_local[i] > _fit_best)) {
+                    if (_compare(_fit_best_local[i], _cv_best_local[i], _fit_best, _cv_best, (_log.iterations + 1) * std::sqrt(_log.iterations + 1))) {
                         _fit_best = _fit_best_local[i];
                         _cv_best = _cv_best_local[i];
                         _best = _best_local.col(i); // TO-DO: Maybe tag to avoid copies?
                     }
 
-                    if (_cv_best_local[i] < _cv_best_neighbor[_neighborhood_ids[i]] || (_is_equal(_cv_best_local[i], _cv_best_neighbor[_neighborhood_ids[i]]) && _fit_best_local[i] > _fit_best_neighbor[_neighborhood_ids[i]])) {
+                    if (_compare(_fit_best_local[i], _cv_best_local[i], _fit_best_neighbor[_neighborhood_ids[i]], _cv_best_neighbor[_neighborhood_ids[i]], (_log.iterations + 1) * std::sqrt(_log.iterations + 1))) {
                         _fit_best_neighbor[_neighborhood_ids[i]] = _fit_best_local[i];
                         _cv_best_neighbor[_neighborhood_ids[i]] = _cv_best_local[i];
                         _best_neighbor.col(_neighborhood_ids[i]) = _best_local.col(i); // TO-DO: Maybe tag to avoid copies?
@@ -413,9 +436,46 @@ namespace algevo {
                 }
             }
 
-            bool _is_equal(Scalar a, Scalar b)
+            Scalar _compute_penalty(const EvalData& data) const
             {
-                return std::abs(a - b) <= _params.epsilon_comp;
+                Scalar pen = 0.;
+                for (unsigned int i = 0; i < _params.neq_dim; i++) {
+                    auto q = std::abs(data.eq_violation[i]);
+                    pen += _theta(q) * q * std::pow(q, _gamma(q));
+                }
+                for (unsigned int i = 0; i < _params.nin_dim; i++) {
+                    auto q = std::abs(std::min(0., data.ineq_violation[i]));
+                    pen += _theta(q) * q * std::pow(q, _gamma(q));
+                }
+
+                return pen;
+            }
+
+            Scalar _gamma(Scalar val) const
+            {
+                for (const auto& p : _params.cv_gamma_levels) {
+                    if (p.first > 0 && val < p.first)
+                        return p.second;
+                }
+                return _params.cv_gamma_levels.back().second;
+            }
+
+            Scalar _theta(Scalar val) const
+            {
+                for (const auto& p : _params.cv_levels) {
+                    if (p.first > 0 && val < p.first)
+                        return p.second;
+                }
+
+                return _params.cv_levels.back().second;
+            }
+
+            bool _compare(Scalar f1, Scalar pen1, Scalar f2, Scalar pen2, Scalar h) const
+            {
+                Scalar v1 = -f1 + h * pen1;
+                Scalar v2 = -f2 + h * pen2;
+
+                return v1 < v2;
             }
         };
     } // namespace algo
