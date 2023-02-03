@@ -47,6 +47,8 @@ def configure(conf):
     conf.check_ifopt(required=False)
     conf.check_towr(required=False)
 
+    conf.check(features='cxx cxxprogram', lib=['pthread'], uselib_store='PTHREAD')
+
     native = '-march=native -DPROXSUITE_VECTORIZE'
     native_icc = 'mtune=native -DPROXSUITE_VECTORIZE'
 
@@ -81,10 +83,9 @@ def configure(conf):
 
 
 def build(bld):
-    libs = 'EIGEN TBB PROXQP SIMDE '
+    libs = 'EIGEN TBB PROXQP SIMDE PTHREAD '
 
     cxxflags = bld.get_env()['CXXFLAGS']
-
 
     bld.program(features = 'cxx',
                 install_path = None,
