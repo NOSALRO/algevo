@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-#include <algevo/external/pocketfft.h>
+#include <algevo/external/pocketfft.hpp>
 #include <algevo/external/rand_utils.hpp>
 
 namespace algevo {
