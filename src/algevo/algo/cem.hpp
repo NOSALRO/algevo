@@ -24,6 +24,7 @@ namespace algevo {
             using rgen_scalar_t = tools::RandomGenerator<rdist_scalar_t>;
             using rdist_scalar_gauss_t = std::normal_distribution<Scalar>;
             using rgen_scalar_gauss_t = tools::RandomGenerator<rdist_scalar_gauss_t>;
+            using colored_noise_t = tools::ColoredNoiseGenerator<Scalar>;
 
             struct Params {
                 int seed = -1;
@@ -45,7 +46,8 @@ namespace algevo {
                 Scalar decrease_pop_factor = 1.;
                 Scalar fraction_elites_reused = 0.;
 
-                Scalar prob_keep_previous = 0.;
+                Scalar prob_keep_previous = 0.; // < 0, colored noise, ==0. regular noise, > 0. sticky actions
+                Scalar beta = 1.; // exponent for colored noise
                 unsigned int elem_size = 0;
             };
 
@@ -57,7 +59,7 @@ namespace algevo {
                 Scalar best_value;
             };
 
-            CrossEntropyMethod(const Params& params) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites)), _elites_reuse_size(std::max(0u, std::min(_params.num_elites, static_cast<unsigned int>(_params.num_elites * _params.fraction_elites_reused)))), _rgen(0., 1., params.seed)
+            CrossEntropyMethod(const Params& params) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites)), _elites_reuse_size(std::max(0u, std::min(_params.num_elites, static_cast<unsigned int>(_params.num_elites * _params.fraction_elites_reused)))), _rgen(0., 1., params.seed), _colored_rgen(params.seed)
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim > 0 && "Dimensions not set!");
@@ -135,6 +137,7 @@ namespace algevo {
 
             // Random numbers
             rgen_scalar_gauss_t _rgen;
+            colored_noise_t _colored_rgen;
 
             void _allocate_data()
             {
@@ -154,8 +157,25 @@ namespace algevo {
             {
                 static thread_local rgen_scalar_t rgen(static_cast<Scalar>(0.), static_cast<Scalar>(1.), _params.seed);
 
-                // Generate data with MPC actions in mind (sticky actions!)
-                if (_params.prob_keep_previous > 0. && _params.elem_size) {
+                if (_params.prob_keep_previous < 0. && _params.elem_size) {
+                    // Generate data with MPC actions in mind (colored noise)
+                    unsigned int n_samples = _params.dim / _params.elem_size;
+                    // Horizon x Dimension per Action x Population (input)
+                    // Population x Dimension x Horizon (output)
+                    auto rand_output = _colored_rgen.rand(_params.beta, n_samples, _params.elem_size, _params.pop_size);
+
+                    // Copy result to population
+                    for (unsigned int i = 0; i < _params.pop_size; i++) {
+                        for (unsigned int j = 0; j < n_samples; j++) {
+                            unsigned int k = j * _params.elem_size;
+                            for (unsigned int l = 0; l < _params.elem_size; l++) {
+                                _population(k + l, i) = rand_output[i][l][j];
+                            }
+                        }
+                    }
+                }
+                else if (_params.prob_keep_previous > 0. && _params.elem_size) {
+                    // Generate data with MPC actions in mind (sticky actions!)
                     Scalar prob = _params.prob_keep_previous;
                     for (unsigned int i = 0; i < _params.pop_size; i++) {
                         for (unsigned int j = 0; j < _params.dim; j += _params.elem_size) {
@@ -179,10 +199,10 @@ namespace algevo {
                             _population(j, i) = _rgen.rand();
                         }
                     }
-
-                    // Convert them into a population: mu_{i+1} = mu_i + sigma_i * random_eps
-                    _population = (_population.array().colwise() * _std_devs.array()).colwise() + _mu.array();
                 }
+
+                // Convert random values (sampled from N(0,1)) into a population: mu_{i+1} = mu_i + sigma_i * random_eps
+                _population = (_population.array().colwise() * _std_devs.array()).colwise() + _mu.array();
 
                 // Clamp inside min/max
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
