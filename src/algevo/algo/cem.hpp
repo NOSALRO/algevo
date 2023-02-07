@@ -65,7 +65,6 @@ namespace algevo {
                 assert(_params.dim > 0 && "Dimensions not set!");
                 assert(_params.num_elites > 0 && _params.num_elites <= _params.pop_size && "Number of elites is wrongly set!");
                 assert(_params.min_value.size() == _params.dim && _params.max_value.size() == _params.dim && "Min/max values dimensions should be the same as the problem dimensions!");
-                assert(_params.min_vel.size() == _params.dim && _params.max_vel.size() == _params.dim && "Min/max velocity dimensions should be the same as the problem dimensions!");
 
                 _allocate_data();
 

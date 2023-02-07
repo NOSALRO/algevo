@@ -10,5 +10,6 @@ Efficient (almost) single file implementations of evolutionary algorithms.
 - Particle Swarm Optimization with Gradient Repair Scheme (UPSO-Grad)
 - Differential Evolution (DE)
 - MAP-Elites (CVT-MAP-Elites)
+- Uncertain MAP-Elites (preliminary: works only for noisy objective function, not noisy features)
 - Cross Entropy Method (CEM) or Simple Gaussian Evolutionary Strategies
 
