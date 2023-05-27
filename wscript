@@ -42,7 +42,7 @@ def configure(conf):
 
     conf.check_eigen(required=True)
     conf.check_tbb(required=True)
-    conf.check_proxqp(required=True)
+    conf.check_proxqp(required=False)
     conf.check_simde(required=False)
     conf.check_ifopt(required=False)
     conf.check_towr(required=False)
@@ -55,7 +55,7 @@ def configure(conf):
     if conf.options.no_native:
         native = ''
         native_icc = ''
-    elif 'INCLUDES_SIMDE' not in conf.env:
+    elif 'INCLUDES_SIMDE' not in conf.env or 'INCLUDES_PROXQP' not in conf.env:
         native = '-march=native'
         native_icc = 'mtune=native'
 
@@ -119,46 +119,47 @@ def build(bld):
                 cxxflags = cxxflags,
                 target = 'sphere_cem')
 
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/traj_opt.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'traj_opt')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/planar_quad.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'planar_quad')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/kinematic_traj.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'kinematic_traj')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/noisy_lstq.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'noisy_lstq')
-
-    if 'INCLUDES_TOWR' in bld.env and 'INCLUDES_IFOPT' in bld.env:
+    if 'INCLUDES_PROXQP' in bld.env:
         bld.program(features = 'cxx',
                     install_path = None,
-                    source = 'src/examples/towr_example.cpp',
+                    source = 'src/examples/traj_opt.cpp',
                     includes = './src',
-                    uselib = libs + 'IFOPT TOWR',
+                    uselib = libs,
                     cxxflags = cxxflags,
-                    target = 'towr_example')
+                    target = 'traj_opt')
+
+        bld.program(features = 'cxx',
+                    install_path = None,
+                    source = 'src/examples/planar_quad.cpp',
+                    includes = './src',
+                    uselib = libs,
+                    cxxflags = cxxflags,
+                    target = 'planar_quad')
+
+        bld.program(features = 'cxx',
+                    install_path = None,
+                    source = 'src/examples/kinematic_traj.cpp',
+                    includes = './src',
+                    uselib = libs,
+                    cxxflags = cxxflags,
+                    target = 'kinematic_traj')
+
+        bld.program(features = 'cxx',
+                    install_path = None,
+                    source = 'src/examples/noisy_lstq.cpp',
+                    includes = './src',
+                    uselib = libs,
+                    cxxflags = cxxflags,
+                    target = 'noisy_lstq')
+
+        if 'INCLUDES_TOWR' in bld.env and 'INCLUDES_IFOPT' in bld.env:
+            bld.program(features = 'cxx',
+                        install_path = None,
+                        source = 'src/examples/towr_example.cpp',
+                        includes = './src',
+                        uselib = libs + 'IFOPT TOWR',
+                        cxxflags = cxxflags,
+                        target = 'towr_example')
 
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):

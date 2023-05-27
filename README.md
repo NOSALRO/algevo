@@ -13,3 +13,34 @@ Efficient (almost) single file implementations of evolutionary algorithms.
 - Uncertain MAP-Elites (preliminary: works only for noisy objective function, not noisy features)
 - Cross Entropy Method (CEM) or Simple Gaussian Evolutionary Strategies
 
+## Citing AlgEvo
+
+If you use `AlgEvo` in a scientific publication, please use the following citation:
+
+```bibtex
+@inproceedings{chatzilygeroudis2023lion,
+    title={Fast and Robust Constrained Optimization via Evolutionary and Quadratic Programming},
+    author={Chatzilygeroudis, Konstantinos and Vrahatis, Michael},
+    year={2023},
+    booktitle={The 17th Learning and Intelligent Optimization Conference (LION)}
+}
+```
+
+## Acknowledgments
+
+This work was supported by the Hellenic Foundation for Research and Innovation (H.F.R.I.) under the "3rd Call for H.F.R.I. Research Projects to support Post-Doctoral Researchers" (Project Acronym: NOSALRO, Project Number: 7541).
+
+<center>
+
+![logo_elidek](https://www.elidek.gr/wp-content/themes/elidek/images/elidek_logo_en.png)
+
+</center>
+
+<!-- <center>
+<img src="https://nosalro.github.io/images/logo_elidek.png" alt="logo_elidek" width="50%"/>
+</center> -->
+
+## License
+
+[BSD 2-Clause "Simplified" License](https://opensource.org/license/bsd-2-clause/)
+
