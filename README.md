@@ -15,7 +15,7 @@ Efficient (almost) single file implementations of evolutionary algorithms.
 
 ## Citing AlgEvo
 
-If you use `AlgEvo` in a scientific publication, please use the following citation:
+If you use `AlgEvo` in a scientific publication, please use the following citation ([pdf](http://costashatz.github.io/files/LION17.pdf)):
 
 ```bibtex
 @inproceedings{chatzilygeroudis2023lion,
