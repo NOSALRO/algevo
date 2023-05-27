@@ -30,11 +30,9 @@ If you use `AlgEvo` in a scientific publication, please use the following citati
 
 This work was supported by the Hellenic Foundation for Research and Innovation (H.F.R.I.) under the "3rd Call for H.F.R.I. Research Projects to support Post-Doctoral Researchers" (Project Acronym: NOSALRO, Project Number: 7541).
 
-<center>
-
-![logo_elidek](https://www.elidek.gr/wp-content/themes/elidek/images/elidek_logo_en.png)
-
-</center>
+<p align="center">
+<img src="https://www.elidek.gr/wp-content/themes/elidek/images/elidek_logo_en.png" alt="logo_elidek"/>
+<p/>
 
 <!-- <center>
 <img src="https://nosalro.github.io/images/logo_elidek.png" alt="logo_elidek" width="50%"/>
