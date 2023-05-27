@@ -2,6 +2,7 @@
 # encoding: utf-8
 #|
 #|    Copyright (c) 2022-2023 Computational Intelligence Lab, University of Patras, Greece
+#|    Copyright (c) 2022-2023 Konstantinos Chatzilygeroudis
 #|    Authors:  Konstantinos Chatzilygeroudis
 #|    email:    costashatz@gmail.com
 #|    website:  https://nosalro.github.io/
