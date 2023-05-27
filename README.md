@@ -44,6 +44,8 @@ If you use `AlgEvo` in a scientific publication, please use the following citati
 }
 ```
 
+The paper descibes the **UPSO-QP** approach.
+
 ## Acknowledgments
 
 This work was supported by the [Hellenic Foundation for Research and Innovation](https://www.elidek.gr/en/homepage/) (H.F.R.I.) under the "3rd Call for H.F.R.I. Research Projects to support Post-Doctoral Researchers" (Project Acronym: NOSALRO, Project Number: 7541).
