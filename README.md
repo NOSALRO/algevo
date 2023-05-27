@@ -38,6 +38,11 @@ This work was supported by the Hellenic Foundation for Research and Innovation (
 <img src="https://nosalro.github.io/images/logo_elidek.png" alt="logo_elidek" width="50%"/>
 </center> -->
 
+This work was conducted within the Computational Intelligence Lab, Department of Mathematics, University of Patras, Greece.
+
+![logo_cilab](https://nosalro.github.io/images/logo_cilab.jpg)
+![logo_upatras](https://www.upatras.gr/wp-content/uploads/up_2017_logo_en.png)
+
 ## License
 
 [BSD 2-Clause "Simplified" License](https://opensource.org/license/bsd-2-clause/)
