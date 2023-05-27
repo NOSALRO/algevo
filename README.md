@@ -29,7 +29,7 @@ Efficient (almost) single file implementations of evolutionary algorithms.
 
 ## Running the Examples
 
-There are numerous examples under `src/examples`. If the compilation procedure has successfully completely, you can run them by `./build/example_name`.
+There are numerous examples under `src/examples`. If the compilation procedure has completed successfully, you can run them by `./build/example_name`.
 
 ## Citing AlgEvo
 
