@@ -13,6 +13,24 @@ Efficient (almost) single file implementations of evolutionary algorithms.
 - [Uncertain MAP-Elites](https://arxiv.org/pdf/2302.00463.pdf) (preliminary: works only for noisy objective function, not noisy features)
 - [improved Cross Entropy Method](https://martius-lab.github.io/iCEM/) (iCEM)
 
+## Compilation/Installation
+
+### Dependencies
+
+- [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page)
+- [TBB](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onetbb.html)
+- [ProxQP](https://github.com/Simple-Robotics/proxsuite) *(optional for UPSO-QP)*
+
+### Compilation/Installation
+
+- `./waf configure [--prefix=PATH_TO_INSTALL]`
+- `./waf`
+- `[sudo] ./waf install`
+
+## Running the Examples
+
+There are numerous examples under `src/examples`. If the compilation procedure has successfully completely, you can run them by `./build/example_name`.
+
 ## Citing AlgEvo
 
 If you use `AlgEvo` in a scientific publication, please use the following citation ([pdf](http://costashatz.github.io/files/LION17.pdf)):
