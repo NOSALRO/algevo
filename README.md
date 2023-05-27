@@ -38,7 +38,7 @@ This work was supported by the Hellenic Foundation for Research and Innovation (
 <img src="https://nosalro.github.io/images/logo_elidek.png" alt="logo_elidek" width="50%"/>
 </center> -->
 
-This work was conducted within the Computational Intelligence Lab, Department of Mathematics, University of Patras, Greece.
+This work was conducted within the [Computational Intelligence Lab](http://cilab.math.upatras.gr/)(CILab), Department of Mathematics, University of Patras, Greece.
 
 <p align="center">
 <img src="https://nosalro.github.io/images/logo_cilab.jpg" alt="logo_cilab" width="50%"/>
