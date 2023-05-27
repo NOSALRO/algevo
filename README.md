@@ -4,14 +4,14 @@ Efficient (almost) single file implementations of evolutionary algorithms.
 
 ## Implemented Algorithms
 
-- Particle Swarm Optimization (UPSO)
-- Gradient-Assisted Particle Swarm Optimization for Constrained Optimization (UPSO-QP)
-- Particle Swarm Optimization with Penalties for Constrained Optimization (UPSO-Penalty)
-- Particle Swarm Optimization with Gradient Repair Scheme (UPSO-Grad)
-- Differential Evolution (DE)
-- MAP-Elites (CVT-MAP-Elites)
-- Uncertain MAP-Elites (preliminary: works only for noisy objective function, not noisy features)
-- Cross Entropy Method (CEM) or Simple Gaussian Evolutionary Strategies
+- [Particle Swarm Optimization](https://www.cs.uoi.gr/~kostasp/papers/C26.pdf) (UPSO)
+- [Gradient-Assisted Particle Swarm Optimization for Constrained Optimization](http://costashatz.github.io/files/LION17.pdf) (UPSO-QP)
+- [Particle Swarm Optimization with Penalties for Constrained Optimization](https://www.cs.cinvestav.mx/~constraint/papers/eisci.pdf) (UPSO-Penalty)
+- [Particle Swarm Optimization with Gradient Repair Scheme](https://www.sciencedirect.com/science/article/abs/pii/S030505480500050X) (UPSO-Grad)
+- [Differential Evolution](https://en.wikipedia.org/wiki/Differential_evolution) (DE)
+- [MAP-Elites](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8000667) (CVT-MAP-Elites)
+- [Uncertain MAP-Elites](https://arxiv.org/pdf/2302.00463.pdf) (preliminary: works only for noisy objective function, not noisy features)
+- [improved Cross Entropy Method](https://martius-lab.github.io/iCEM/) (iCEM)
 
 ## Citing AlgEvo
 
@@ -28,7 +28,7 @@ If you use `AlgEvo` in a scientific publication, please use the following citati
 
 ## Acknowledgments
 
-This work was supported by the Hellenic Foundation for Research and Innovation (H.F.R.I.) under the "3rd Call for H.F.R.I. Research Projects to support Post-Doctoral Researchers" (Project Acronym: NOSALRO, Project Number: 7541).
+This work was supported by the [Hellenic Foundation for Research and Innovation](https://www.elidek.gr/en/homepage/) (H.F.R.I.) under the "3rd Call for H.F.R.I. Research Projects to support Post-Doctoral Researchers" (Project Acronym: NOSALRO, Project Number: 7541).
 
 <p align="center">
 <img src="https://www.elidek.gr/wp-content/themes/elidek/images/elidek_logo_en.png" alt="logo_elidek"/>
