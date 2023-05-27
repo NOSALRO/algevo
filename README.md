@@ -40,8 +40,10 @@ This work was supported by the Hellenic Foundation for Research and Innovation (
 
 This work was conducted within the Computational Intelligence Lab, Department of Mathematics, University of Patras, Greece.
 
-![logo_cilab](https://nosalro.github.io/images/logo_cilab.jpg)
-![logo_upatras](https://www.upatras.gr/wp-content/uploads/up_2017_logo_en.png)
+<p align="center">
+<img src="https://nosalro.github.io/images/logo_cilab.jpg" alt="logo_cilab" width="50%"/>
+<img src="https://www.upatras.gr/wp-content/uploads/up_2017_logo_en.png" alt="logo_cilab" width="50%"/>
+</p>
 
 ## License
 
