@@ -32,6 +32,15 @@ def options(opt):
     opt.add_option('--exp', type='string',
                    help='exp(s) to build, separate by comma', dest='exp')
 
+    for i in glob.glob('exp/*'):
+        if os.path.isdir(i):
+            opt.start_msg('command-line options for [%s]' % i)
+            try:
+                opt.recurse(i)
+                opt.end_msg(' -> OK')
+            except WafError:
+                opt.end_msg(' -> no options found')
+
 def configure(conf):
     conf.load('compiler_cxx')
     conf.load('compiler_c')
