@@ -31,7 +31,7 @@ def options(opt):
     opt.add_option('--no-native', action='store_true', help='Do not compile with march=native optimization flags', dest='no_native')
     opt.add_option('--exp', type='string',
                    help='exp(s) to build, separate by comma', dest='exp')
-                   
+
 def configure(conf):
     conf.load('compiler_cxx')
     conf.load('compiler_c')
@@ -91,83 +91,7 @@ def configure(conf):
 
 
 def build(bld):
-    libs = 'EIGEN TBB PROXQP SIMDE PTHREAD '
-
-    cxxflags = bld.get_env()['CXXFLAGS']
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/sphere_pso.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'sphere_pso')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/sphere_map_elites.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'sphere_map_elites')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/sphere_de.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'sphere_de')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/sphere_cem.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'sphere_cem')
-
-    if 'INCLUDES_PROXQP' in bld.env:
-        bld.program(features = 'cxx',
-                    install_path = None,
-                    source = 'src/examples/traj_opt.cpp',
-                    includes = './src',
-                    uselib = libs,
-                    cxxflags = cxxflags,
-                    target = 'traj_opt')
-
-        bld.program(features = 'cxx',
-                    install_path = None,
-                    source = 'src/examples/planar_quad.cpp',
-                    includes = './src',
-                    uselib = libs,
-                    cxxflags = cxxflags,
-                    target = 'planar_quad')
-
-        bld.program(features = 'cxx',
-                    install_path = None,
-                    source = 'src/examples/kinematic_traj.cpp',
-                    includes = './src',
-                    uselib = libs,
-                    cxxflags = cxxflags,
-                    target = 'kinematic_traj')
-
-        bld.program(features = 'cxx',
-                    install_path = None,
-                    source = 'src/examples/noisy_lstq.cpp',
-                    includes = './src',
-                    uselib = libs,
-                    cxxflags = cxxflags,
-                    target = 'noisy_lstq')
-
-        if 'INCLUDES_TOWR' in bld.env and 'INCLUDES_IFOPT' in bld.env:
-            bld.program(features = 'cxx',
-                        install_path = None,
-                        source = 'src/examples/towr_example.cpp',
-                        includes = './src',
-                        uselib = libs + 'IFOPT TOWR',
-                        cxxflags = cxxflags,
-                        target = 'towr_example')
+    bld.recurse('src/examples')
 
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
