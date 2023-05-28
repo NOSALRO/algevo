@@ -29,7 +29,9 @@ def options(opt):
     opt.load('towr')
 
     opt.add_option('--no-native', action='store_true', help='Do not compile with march=native optimization flags', dest='no_native')
-
+    opt.add_option('--exp', type='string',
+                   help='exp(s) to build, separate by comma', dest='exp')
+                   
 def configure(conf):
     conf.load('compiler_cxx')
     conf.load('compiler_c')
@@ -80,6 +82,12 @@ def configure(conf):
     all_flags = common_flags + opt_flags + " -DNDEBUG"
     conf.env['CXXFLAGS'] = conf.env['CXXFLAGS'] + all_flags.split()
     print(conf.env['CXXFLAGS'])
+
+    if conf.options.exp:
+        for i in conf.options.exp.split(','):
+            Logs.pprint('NORMAL', 'configuring for exp: %s' % i)
+            conf.recurse('exp/' + i)
+
 
 
 def build(bld):
@@ -174,3 +182,9 @@ def build(bld):
         if end_index == -1:
             end_index = len(f)
         bld.install_files('${PREFIX}/include/' + f[4:end_index], f)
+
+    if bld.options.exp:
+        for i in bld.options.exp.split(','):
+            Logs.pprint('NORMAL', 'Building exp: %s' % i)
+            bld.recurse('exp/' + i)
+
