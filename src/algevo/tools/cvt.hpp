@@ -40,6 +40,12 @@
 
 #ifdef USE_TBB
 #include <tbb/tbb.h>
+
+#ifdef USE_ONEAPI_TBB
+#include <oneapi/tbb/mutex.h>
+using namespace oneapi;
+#endif
+
 #endif
 
 #include <Eigen/Core>
