@@ -63,7 +63,7 @@ def check_tbb(self, *k, **kw):
 
     if self.options.tbb:
         includes_tbb = [self.options.tbb + '/include']
-        libpath_tbb = [self.options.tbb + '/lib']
+        libpath_tbb = [self.options.tbb + '/lib', self.options.tbb + '/lib64']
     else:
         includes_tbb = ['/usr/local/include', '/usr/include', '/opt/local/include', '/sw/include', '/opt/homebrew/include']
         libpath_tbb = ['/usr/lib', '/usr/local/lib64', '/usr/local/lib', '/opt/local/lib', '/sw/lib', '/lib', '/usr/lib64', '/usr/lib/x86_64-linux-gnu/', '/usr/local/lib/x86_64-linux-gnu/', '/usr/lib/aarch64-linux-gnu/', '/usr/local/lib/aarch64-linux-gnu/', '/opt/homebrew/lib']
