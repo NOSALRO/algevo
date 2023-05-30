@@ -37,7 +37,7 @@ def options(opt):
             try:
                 opt.recurse(i)
                 opt.end_msg(' -> OK')
-            except WafError:
+            except opt.errors.WafError:
                 opt.end_msg(' -> no options found')
 
 def configure(conf):
