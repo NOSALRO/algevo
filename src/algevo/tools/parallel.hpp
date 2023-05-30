@@ -55,6 +55,8 @@ namespace algevo {
 #ifndef USE_TBB_ONEAPI
             static tbb::task_scheduler_init init(threads);
 #else
+            if (threads < 0)
+                threads = tbb::info::default_concurrency();
             static tbb::global_control global_limit(tbb::global_control::max_allowed_parallelism, threads);
 
 #endif
