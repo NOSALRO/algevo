@@ -29,6 +29,16 @@ def options(opt):
     opt.load('towr')
 
     opt.add_option('--no-native', action='store_true', help='Do not compile with march=native optimization flags', dest='no_native')
+    opt.add_option('--exp', type='string', help='exp(s) to build, separate by comma', dest='exp')
+
+    for i in glob.glob('exp/*'):
+        if os.path.isdir(i):
+            opt.start_msg('command-line options for [%s]' % i)
+            try:
+                opt.recurse(i)
+                opt.end_msg(' -> OK')
+            except WafError:
+                opt.end_msg(' -> no options found')
 
 def configure(conf):
     conf.load('compiler_cxx')
@@ -81,85 +91,15 @@ def configure(conf):
     conf.env['CXXFLAGS'] = conf.env['CXXFLAGS'] + all_flags.split()
     print(conf.env['CXXFLAGS'])
 
+    if conf.options.exp:
+        for i in conf.options.exp.split(','):
+            Logs.pprint('NORMAL', 'configuring for exp: %s' % i)
+            conf.recurse('exp/' + i)
+
+
 
 def build(bld):
-    libs = 'EIGEN TBB PROXQP SIMDE PTHREAD '
-
-    cxxflags = bld.get_env()['CXXFLAGS']
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/sphere_pso.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'sphere_pso')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/sphere_map_elites.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'sphere_map_elites')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/sphere_de.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'sphere_de')
-
-    bld.program(features = 'cxx',
-                install_path = None,
-                source = 'src/examples/sphere_cem.cpp',
-                includes = './src',
-                uselib = libs,
-                cxxflags = cxxflags,
-                target = 'sphere_cem')
-
-    if 'INCLUDES_PROXQP' in bld.env:
-        bld.program(features = 'cxx',
-                    install_path = None,
-                    source = 'src/examples/traj_opt.cpp',
-                    includes = './src',
-                    uselib = libs,
-                    cxxflags = cxxflags,
-                    target = 'traj_opt')
-
-        bld.program(features = 'cxx',
-                    install_path = None,
-                    source = 'src/examples/planar_quad.cpp',
-                    includes = './src',
-                    uselib = libs,
-                    cxxflags = cxxflags,
-                    target = 'planar_quad')
-
-        bld.program(features = 'cxx',
-                    install_path = None,
-                    source = 'src/examples/kinematic_traj.cpp',
-                    includes = './src',
-                    uselib = libs,
-                    cxxflags = cxxflags,
-                    target = 'kinematic_traj')
-
-        bld.program(features = 'cxx',
-                    install_path = None,
-                    source = 'src/examples/noisy_lstq.cpp',
-                    includes = './src',
-                    uselib = libs,
-                    cxxflags = cxxflags,
-                    target = 'noisy_lstq')
-
-        if 'INCLUDES_TOWR' in bld.env and 'INCLUDES_IFOPT' in bld.env:
-            bld.program(features = 'cxx',
-                        install_path = None,
-                        source = 'src/examples/towr_example.cpp',
-                        includes = './src',
-                        uselib = libs + 'IFOPT TOWR',
-                        cxxflags = cxxflags,
-                        target = 'towr_example')
+    bld.recurse('src/examples')
 
     install_files = []
     for root, dirnames, filenames in os.walk(bld.path.abspath()+'/src/'):
@@ -174,3 +114,9 @@ def build(bld):
         if end_index == -1:
             end_index = len(f)
         bld.install_files('${PREFIX}/include/' + f[4:end_index], f)
+
+    if bld.options.exp:
+        for i in bld.options.exp.split(','):
+            Logs.pprint('NORMAL', 'Building exp: %s' % i)
+            bld.recurse('exp/' + i)
+

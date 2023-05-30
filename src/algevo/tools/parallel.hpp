@@ -37,7 +37,14 @@
 #ifdef USE_TBB
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_for_each.h>
+
+#ifndef USE_TBB_ONEAPIB
 #include <tbb/task_scheduler_init.h>
+#else
+#include <oneapi/tbb/global_control.h>
+using namespace oneapi;
+#endif
+
 #endif
 
 namespace algevo {
@@ -45,7 +52,12 @@ namespace algevo {
 #ifdef USE_TBB
         inline void parallel_init(int threads = -1)
         {
+#ifndef USE_TBB_ONEAPIB
             static tbb::task_scheduler_init init(threads);
+#else
+            static tbb::global_control global_limit(tbb::global_control::max_allowed_parallelism, threads);
+
+#endif
         }
 #else
         inline void parallel_init()
@@ -80,6 +92,6 @@ namespace algevo {
         }
 
     } // namespace tools
-} // namespace ge
+} // namespace algevo
 
 #endif

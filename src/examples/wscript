@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+
+def build(bld):
+    cxxflags = bld.get_env()['CXXFLAGS']
+    libs = 'EIGEN TBB PROXQP SIMDE PTHREAD '
+
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'sphere_pso.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'sphere_pso')
+
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'sphere_map_elites.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'sphere_map_elites')
+
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'sphere_de.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'sphere_de')
+
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'sphere_cem.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'sphere_cem')
+
+    if 'INCLUDES_PROXQP' in bld.env:
+        bld.program(features = 'cxx',
+                    install_path = None,
+                    source = 'traj_opt.cpp',
+                    includes = '. .. ../../',
+                    uselib = libs,
+                    cxxflags = cxxflags,
+                    target = 'traj_opt')
+
+        bld.program(features = 'cxx',
+                    install_path = None,
+                    source = 'planar_quad.cpp',
+                    includes = '. .. ../../',
+                    uselib = libs,
+                    cxxflags = cxxflags,
+                    target = 'planar_quad')
+
+        bld.program(features = 'cxx',
+                    install_path = None,
+                    source = 'kinematic_traj.cpp',
+                    includes = '. .. ../../',
+                    uselib = libs,
+                    cxxflags = cxxflags,
+                    target = 'kinematic_traj')
+
+        bld.program(features = 'cxx',
+                    install_path = None,
+                    source = 'noisy_lstq.cpp',
+                    includes = '. .. ../../',
+                    uselib = libs,
+                    cxxflags = cxxflags,
+                    target = 'noisy_lstq')
+
+        if 'INCLUDES_TOWR' in bld.env and 'INCLUDES_IFOPT' in bld.env:
+            bld.program(features = 'cxx',
+                        install_path = None,
+                        source = 'towr_example.cpp',
+                        includes = '. .. ../../',
+                        uselib = libs + 'IFOPT TOWR',
+                        cxxflags = cxxflags,
+                        target = 'towr_example')

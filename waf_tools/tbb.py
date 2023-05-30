@@ -63,7 +63,7 @@ def check_tbb(self, *k, **kw):
 
     if self.options.tbb:
         includes_tbb = [self.options.tbb + '/include']
-        libpath_tbb = [self.options.tbb + '/lib']
+        libpath_tbb = [self.options.tbb + '/lib', self.options.tbb + '/lib64']
     else:
         includes_tbb = ['/usr/local/include', '/usr/include', '/opt/local/include', '/sw/include', '/opt/homebrew/include']
         libpath_tbb = ['/usr/lib', '/usr/local/lib64', '/usr/local/lib', '/opt/local/lib', '/sw/lib', '/lib', '/usr/lib64', '/usr/lib/x86_64-linux-gnu/', '/usr/local/lib/x86_64-linux-gnu/', '/usr/lib/aarch64-linux-gnu/', '/usr/local/lib/aarch64-linux-gnu/', '/opt/homebrew/lib']
@@ -80,6 +80,18 @@ def check_tbb(self, *k, **kw):
         self.end_msg('Not found in %s' % str(includes_tbb), 'YELLOW')
         return
 
+    # check for oneapi vs older tbb
+    self.start_msg('Checking for Intel OneAPI TBB')
+    using_oneapi = False
+    try:
+        incl = get_directory('oneapi/tbb.h', includes_tbb)
+        self.end_msg(incl)
+        using_oneapi = True
+    except:
+        self.end_msg('Not found in %s, reverting to older TBB' % str(includes_tbb), 'YELLOW')
+        using_oneapi = False
+
+
     self.start_msg('Checking Intel TBB libs')
     try:
         lib = check_lib(self, 'libtbb', libpath_tbb)
@@ -94,3 +106,5 @@ def check_tbb(self, *k, **kw):
     self.env.LIB_TBB = ['tbb']
     self.env.INCLUDES_TBB = [incl]
     self.env.DEFINES_TBB = ['USE_TBB']
+    if using_oneapi:
+        self.env.DEFINES_TBB += ['USE_TBB_ONEAPI']

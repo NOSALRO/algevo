@@ -34,12 +34,19 @@
 #ifndef ALGEVO_TOOLS_CVT_HPP
 #define ALGEVO_TOOLS_CVT_HPP
 
-#include <algorithm> //for random_shuffle
+#include <algorithm>
+#include <random>
 #include <numeric> //for iota
 #include <vector>
 
 #ifdef USE_TBB
 #include <tbb/tbb.h>
+
+#ifdef USE_TBB_ONEAPIB
+#include <oneapi/tbb/mutex.h>
+using namespace oneapi;
+#endif
+
 #endif
 
 #include <Eigen/Core>
@@ -61,8 +68,13 @@ namespace algevo {
 
                 std::vector<unsigned int> indices(data.cols());
                 std::iota(indices.begin(), indices.end(), 0);
+#if __cplusplus > 201402L
+                std::random_device rd;
+                std::mt19937 g(rd());
+                std::shuffle(indices.begin(), indices.end(), g);
+#else
                 std::random_shuffle(indices.begin(), indices.end());
-
+#endif
                 // Create the centroids
                 unsigned int dim = data.rows();
                 Matrix centroids = Matrix::Zero(dim, num_clusters);
