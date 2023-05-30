@@ -29,8 +29,7 @@ def options(opt):
     opt.load('towr')
 
     opt.add_option('--no-native', action='store_true', help='Do not compile with march=native optimization flags', dest='no_native')
-    opt.add_option('--exp', type='string',
-                   help='exp(s) to build, separate by comma', dest='exp')
+    opt.add_option('--exp', type='string', help='exp(s) to build, separate by comma', dest='exp')
 
     for i in glob.glob('exp/*'):
         if os.path.isdir(i):
