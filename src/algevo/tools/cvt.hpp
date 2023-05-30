@@ -42,7 +42,7 @@
 #ifdef USE_TBB
 #include <tbb/tbb.h>
 
-#ifdef USE_ONEAPI_TBB
+#ifdef USE_TBB_ONEAPIB
 #include <oneapi/tbb/mutex.h>
 using namespace oneapi;
 #endif

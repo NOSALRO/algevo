@@ -89,7 +89,7 @@ def check_tbb(self, *k, **kw):
         using_oneapi = True
     except:
         self.end_msg('Not found in %s, reverting to older TBB' % str(includes_tbb), 'YELLOW')
-        return
+        using_oneapi = False
 
 
     self.start_msg('Checking Intel TBB libs')
@@ -107,4 +107,4 @@ def check_tbb(self, *k, **kw):
     self.env.INCLUDES_TBB = [incl]
     self.env.DEFINES_TBB = ['USE_TBB']
     if using_oneapi:
-        self.env.DEFINES_TBB += ['USE_ONEAPI_TBB']
+        self.env.DEFINES_TBB += ['USE_TBB_ONEAPI']
