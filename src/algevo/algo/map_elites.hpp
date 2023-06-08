@@ -37,6 +37,7 @@
 #include <Eigen/Core>
 
 #include <array>
+#include <cstddef>
 #include <limits>
 
 #include <algevo/tools/parallel.hpp>
@@ -68,7 +69,7 @@ namespace algevo {
         // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
         // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         /// END OF LICENSE
-        template <typename Fit, typename eval_qd_args, typename Scalar = double>
+        template <typename Fit, typename eval_qd_args = std::nullptr_t, typename Scalar = double>
         class MapElites {
         public:
             using mat_t = Eigen::Matrix<Scalar, -1, -1>;
@@ -271,7 +272,10 @@ namespace algevo {
                 tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
                     // TO-DO: Check how to avoid copying here
                     x_t p(_params.dim_features);
-                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i), _eval_qd_args.args);
+                    if (std::is_same<eval_qd_args, std::nullptr_t>::value)
+                        std::tie(_batch_fit(i), p) =  _fit_evals[i].eval_qd(_batch.col(i));
+                    else
+                        std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i), _eval_qd_args.args);
                     // clip in [min,max]
                     for (unsigned int j = 0; j < _params.dim_features; j++) {
                         p(j) = std::max(_params.min_feat[j], std::min(_params.max_feat[j], p(j)));

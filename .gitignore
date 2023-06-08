@@ -51,3 +51,4 @@ obj
 .vscode
 *.layout
 __pycache__
+*.clang*

@@ -37,6 +37,9 @@
 #include <Eigen/Core>
 
 namespace algevo {
+
+    struct EvalArgs {};
+
     template <typename Scalar = double>
     struct FitSphere {
         static constexpr unsigned int dim = 20;
@@ -57,6 +60,7 @@ namespace algevo {
             return -x.cwiseMin(max_value).cwiseMax(min_value).squaredNorm();
         }
 
+        std::pair<Scalar, feat_t> eval_qd(const x_t& x, std::nullptr_t args) {};
         std::pair<Scalar, feat_t> eval_qd(const x_t& x)
         {
             // static constexpr double scale_range = 20.;
@@ -92,6 +96,7 @@ namespace algevo {
             return -_value(x);
         }
 
+        std::pair<Scalar, feat_t> eval_qd(const x_t& x, std::nullptr_t args) {};
         std::pair<Scalar, feat_t> eval_qd(const x_t& x)
         {
             return {-_value(x), (x.cwiseMin(max_value).cwiseMax(min_value).array() - min_value) / (max_value - min_value)};
