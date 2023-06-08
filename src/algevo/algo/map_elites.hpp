@@ -68,7 +68,7 @@ namespace algevo {
         // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
         // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         /// END OF LICENSE
-        template <typename Fit, typename Scalar = double>
+        template <typename Fit, typename eval_qd_args, typename Scalar = double>
         class MapElites {
         public:
             using mat_t = Eigen::Matrix<Scalar, -1, -1>;
@@ -80,6 +80,10 @@ namespace algevo {
             using rgen_scalar_t = tools::RandomGenerator<rdist_scalar_t>;
             using rdist_scalar_gauss_t = std::normal_distribution<Scalar>;
             using rgen_scalar_gauss_t = tools::RandomGenerator<rdist_scalar_gauss_t>;
+
+            struct Args {
+                eval_qd_args args;
+            };
 
             struct Params {
                 int seed = -1;
@@ -267,7 +271,7 @@ namespace algevo {
                 tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
                     // TO-DO: Check how to avoid copying here
                     x_t p(_params.dim_features);
-                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i));
+                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i), _eval_qd_args.args);
                     // clip in [min,max]
                     for (unsigned int j = 0; j < _params.dim_features; j++) {
                         p(j) = std::max(_params.min_feat[j], std::min(_params.max_feat[j], p(j)));
@@ -325,9 +329,13 @@ namespace algevo {
                 return _log;
             }
 
+            const Args args() const { return _eval_qd_args; };
+
         protected:
             // Parameters
             Params _params;
+
+            Args _eval_qd_args;
 
             // Iteration Log
             IterationLog _log;
