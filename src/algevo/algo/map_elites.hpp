@@ -36,6 +36,7 @@
 
 #include <Eigen/Core>
 
+#include <iostream>
 #include <array>
 #include <cstddef>
 #include <limits>
@@ -273,7 +274,7 @@ namespace algevo {
                     // TO-DO: Check how to avoid copying here
                     x_t p(_params.dim_features);
                     if (std::is_same<eval_qd_args, std::nullptr_t>::value)
-                        std::tie(_batch_fit(i), p) =  _fit_evals[i].eval_qd(_batch.col(i));
+                        std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i));
                     else
                         std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i), _eval_qd_args.args);
                     // clip in [min,max]
@@ -333,7 +334,32 @@ namespace algevo {
                 return _log;
             }
 
-            const Args args() const { return _eval_qd_args; };
+            const eval_qd_args args() const { return _eval_qd_args.args; }
+
+            void set_centroids(const mat_t& centroids)
+            {
+                _centroids = centroids;
+                std::fill(_new_rank.begin(), _new_rank.end(), -1);
+                tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
+                    // search for the closest centroid / the grid
+                    int best_i = -1;
+                    // TO-DO: Do not iterate over all cells; make a tree or something
+                    Scalar best_dist = std::numeric_limits<Scalar>::max();
+                    for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
+                        Scalar d = (_batch_features.col(i) - _centroids.col(j)).squaredNorm();
+                        if (d < best_dist) {
+                            best_dist = d;
+                            best_i = j;
+                        }
+                    }
+
+                    // This is the same as the for loop, but shorter
+                    // (_centroids.colwise() - _batch_features.col(i)).colwise().squaredNorm().minCoeff(&best_i);
+
+                    if (_batch_fit(i) > _archive_fit(best_i))
+                        _new_rank[i] = best_i;
+                });
+            }
 
         protected:
             // Parameters
