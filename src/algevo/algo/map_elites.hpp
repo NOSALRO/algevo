@@ -169,6 +169,56 @@ namespace algevo {
             const mat_t& centroids() const { return _centroids; }
             mat_t& centroids() { return _centroids; }
 
+            // WARNING: This is making the previous log dirty and not to be trusted!
+            void set_centroids(const mat_t& centroids)
+            {
+                assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
+
+                _centroids = centroids;
+
+                // Let's reassign all archive
+                batch_ranks_t ranks(_params.num_cells, -1);
+                tools::parallel_loop(0, _params.num_cells, [this, &ranks](unsigned int i) {
+                    if (!valid_individual(i))
+                        return;
+                    // search for the closest centroid / the grid
+                    int best_i = -1;
+                    // TO-DO: Do not iterate over all cells; make a tree or something
+                    Scalar best_dist = std::numeric_limits<Scalar>::max();
+                    for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
+                        Scalar d = (_archive_features.col(i) - _centroids.col(j)).squaredNorm();
+                        if (d < best_dist) {
+                            best_dist = d;
+                            best_i = j;
+                        }
+                    }
+
+                    // This is the same as the for loop, but shorter
+                    // (_centroids.colwise() - _archive_features.col(i)).colwise().squaredNorm().minCoeff(&best_i);
+
+                    // We do not want to check fitness here (just re-assigning cells)
+                    ranks[i] = best_i;
+                });
+
+                // apply the new ranks
+                // We need to copy everything and re-fill
+                mat_t old_archive = _archive;
+                x_t old_archive_fit = _archive_fit;
+                mat_t old_archive_features = _archive_features;
+
+                // re-initialize features/fitness
+                _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
+                _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
+
+                for (unsigned int i = 0; i < _params.num_cells; i++) {
+                    if (ranks[i] != -1 && (old_archive_fit(i) > _archive_fit(ranks[i]))) {
+                        _archive.col(ranks[i]) = old_archive.col(i);
+                        _archive_fit(ranks[i]) = old_archive_fit(i);
+                        _archive_features.col(ranks[i]) = old_archive_features.col(i);
+                    }
+                }
+            }
+
             const mat_t& all_features() const { return _archive_features; }
             mat_t& all_features() { return _archive_features; }
 
@@ -299,7 +349,7 @@ namespace algevo {
 
                 // apply the new ranks
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
-                    if (_new_rank[i] != -1) {
+                    if (_new_rank[i] != -1 && (_batch_fit(i) > _archive_fit(_new_rank[i]))) {
                         _archive.col(_new_rank[i]) = _batch.col(i);
                         _archive_fit(_new_rank[i]) = _batch_fit(i);
                         _archive_features.col(_new_rank[i]) = _batch_features.col(i);
