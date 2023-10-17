@@ -45,6 +45,8 @@
 #ifdef USE_TBB_ONEAPI
 #include <oneapi/tbb/mutex.h>
 using namespace oneapi;
+#else
+#include <tbb/mutex.h>
 #endif
 
 #endif
