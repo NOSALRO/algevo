@@ -45,6 +45,8 @@
 #ifdef USE_TBB_ONEAPI
 #include <oneapi/tbb/mutex.h>
 using namespace oneapi;
+#elif
+#include <tbb/mutex.h>
 #endif
 
 #endif
@@ -179,7 +181,7 @@ namespace algevo {
                     }
 
 #ifdef USE_TBB
-                    std::mutex::scoped_lock lock; // create a lock
+                    tbb::mutex::scoped_lock lock; // create a lock
                     lock.acquire(sm);
 #endif
                     sum += min_distance;
