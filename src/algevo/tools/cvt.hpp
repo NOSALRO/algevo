@@ -43,6 +43,8 @@
 #include <tbb/tbb.h>
 
 #ifdef USE_TBB_ONEAPI
+// workaround for half oneapi::tbb version!
+#define __TBB_PREVIEW_MUTEXES true
 #include <oneapi/tbb/mutex.h>
 using namespace oneapi;
 #endif
