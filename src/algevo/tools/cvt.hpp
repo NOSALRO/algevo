@@ -45,8 +45,6 @@
 #ifdef USE_TBB_ONEAPI
 #include <oneapi/tbb/mutex.h>
 using namespace oneapi;
-#else
-#include <tbb/mutex.h>
 #endif
 
 #endif
@@ -158,7 +156,7 @@ namespace algevo {
                 unsigned int nb_points = data.cols();
                 Scalar sum = 0.;
 #ifdef USE_TBB
-                static tbb::mutex sm;
+                static std::mutex sm;
 #endif
 
                 tools::parallel_loop(0, nb_points, [&](unsigned int i) {
@@ -181,7 +179,7 @@ namespace algevo {
                     }
 
 #ifdef USE_TBB
-                    tbb::mutex::scoped_lock lock; // create a lock
+                    std::mutex::scoped_lock lock; // create a lock
                     lock.acquire(sm);
 #endif
                     sum += min_distance;
