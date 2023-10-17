@@ -158,7 +158,7 @@ namespace algevo {
                 unsigned int nb_points = data.cols();
                 Scalar sum = 0.;
 #ifdef USE_TBB
-                static std::mutex sm;
+                static tbb::mutex sm;
 #endif
 
                 tools::parallel_loop(0, nb_points, [&](unsigned int i) {
