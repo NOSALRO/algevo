@@ -72,13 +72,17 @@ int main()
     // Instantiate algorithm
     Algo map_elites(params);
 
-    for (unsigned int i = 0; i < 500; i++) {
+    FitSphere::feat_t new_feats = FitSphere::feat_t::Zero();
+
+    for (unsigned int i = 0; i < 2; i++) {
         auto log = map_elites.step();
         std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
-        const auto& archive = map_elites.all_features();
-        for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
-            std::cout << "    " << j << ": " << archive.col(log.valid_individuals[j]).transpose() << std::endl;
-        }
+        const auto& archive = map_elites.archive_fit();
+        // for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
+        //     std::cout << "    " << j << ": " << archive.col(log.valid_individuals[j]).transpose() << std::endl;
+        // }
+        map_elites.update_features(new_feats);
+        std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
     }
     return 0;
 }

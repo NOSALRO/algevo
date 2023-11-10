@@ -237,6 +237,35 @@ namespace algevo {
                 return features;
             }
 
+            void update_features(const mat_t& features)
+            {
+                const unsigned int archive_sz = archive_size();
+                if (archive_sz > 0) {
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        if (valid_individual(i)) {
+                            _archive_features.col(i) = features.col(i);
+                        }
+                    }
+                }
+
+                std::fill(_new_rank.begin(), _new_rank.end(), -1);
+                tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
+                    // search for the closest centroid / the grid
+                    int best_i = -1;
+                    // TO-DO: Do not iterate over all cells; make a tree or something
+                    Scalar best_dist = std::numeric_limits<Scalar>::max();
+                    for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
+                        Scalar d = (_archive_features.col(i) - _centroids.col(j)).squaredNorm();
+                        if (d < best_dist) {
+                            best_dist = d;
+                            best_i = j;
+                        }
+                    }
+                    if (_batch_fit(i) > _archive_fit(best_i))
+                        _new_rank[i] = best_i;
+                });
+            }
+
             std::pair<mat_t, mat_t> archive_features() const
             {
                 const unsigned int archive_sz = archive_size();
