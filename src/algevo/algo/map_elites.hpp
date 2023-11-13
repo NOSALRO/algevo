@@ -169,54 +169,25 @@ namespace algevo {
             const mat_t& centroids() const { return _centroids; }
             mat_t& centroids() { return _centroids; }
 
-            // WARNING: This is making the previous log dirty and not to be trusted!
-            void set_centroids(const mat_t& centroids)
+            // WARNING: This is making the previous log dirty and not to be trusted! It returns a new log!
+            IterationLog set_centroids(const mat_t& centroids)
             {
                 assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
 
                 _centroids = centroids;
 
-                // Let's reassign all archive
-                batch_ranks_t ranks(_params.num_cells, -1);
-                tools::parallel_loop(0, _params.num_cells, [this, &ranks](unsigned int i) {
-                    if (!valid_individual(i))
-                        return;
-                    // search for the closest centroid / the grid
-                    int best_i = -1;
-                    // TO-DO: Do not iterate over all cells; make a tree or something
-                    Scalar best_dist = std::numeric_limits<Scalar>::max();
-                    for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
-                        Scalar d = (_archive_features.col(i) - _centroids.col(j)).squaredNorm();
-                        if (d < best_dist) {
-                            best_dist = d;
-                            best_i = j;
-                        }
-                    }
+                return _recompute_archive();
+            }
 
-                    // This is the same as the for loop, but shorter
-                    // (_centroids.colwise() - _archive_features.col(i)).colwise().squaredNorm().minCoeff(&best_i);
-
-                    // We do not want to check fitness here (just re-assigning cells)
-                    ranks[i] = best_i;
-                });
-
-                // apply the new ranks
-                // We need to copy everything and re-fill
-                mat_t old_archive = _archive;
-                x_t old_archive_fit = _archive_fit;
-                mat_t old_archive_features = _archive_features;
-
-                // re-initialize features/fitness
-                _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
-                _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
-
-                for (unsigned int i = 0; i < _params.num_cells; i++) {
-                    if (ranks[i] != -1 && (old_archive_fit(i) > _archive_fit(ranks[i]))) {
-                        _archive.col(ranks[i]) = old_archive.col(i);
-                        _archive_fit(ranks[i]) = old_archive_fit(i);
-                        _archive_features.col(ranks[i]) = old_archive_features.col(i);
-                    }
+            // WARNING: This is making the previous log dirty and not to be trusted! It returns a new log!
+            IterationLog update_features(const mat_t& features)
+            {
+                const unsigned int archive_sz = archive_size();
+                for (unsigned int i = 0; i < archive_sz; i++) {
+                    _archive_features.col(_log.valid_individuals[i]) = features.col(i);
                 }
+
+                return _recompute_archive();
             }
 
             const mat_t& all_features() const { return _archive_features; }
@@ -235,35 +206,6 @@ namespace algevo {
                     }
                 }
                 return features;
-            }
-
-            void update_features(const mat_t& features)
-            {
-                const unsigned int archive_sz = archive_size();
-                if (archive_sz > 0) {
-                    for (unsigned int i = 0; i < _params.num_cells; i++) {
-                        if (valid_individual(i)) {
-                            _archive_features.col(i) = features.col(i);
-                        }
-                    }
-                }
-
-                std::fill(_new_rank.begin(), _new_rank.end(), -1);
-                tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
-                    // search for the closest centroid / the grid
-                    int best_i = -1;
-                    // TO-DO: Do not iterate over all cells; make a tree or something
-                    Scalar best_dist = std::numeric_limits<Scalar>::max();
-                    for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
-                        Scalar d = (_archive_features.col(i) - _centroids.col(j)).squaredNorm();
-                        if (d < best_dist) {
-                            best_dist = d;
-                            best_i = j;
-                        }
-                    }
-                    if (_batch_fit(i) > _archive_fit(best_i))
-                        _new_rank[i] = best_i;
-                });
             }
 
             std::pair<mat_t, mat_t> archive_features() const
@@ -450,6 +392,66 @@ namespace algevo {
                 _new_rank.resize(_params.pop_size);
 
                 _fit_evals.resize(_params.pop_size);
+            }
+
+            IterationLog _recompute_archive()
+            {
+                // Let's reassign all archive
+                batch_ranks_t ranks(_params.num_cells, -1);
+                tools::parallel_loop(0, _params.num_cells, [this, &ranks](unsigned int i) {
+                    if (!valid_individual(i))
+                        return;
+                    // search for the closest centroid / the grid
+                    int best_i = -1;
+                    // TO-DO: Do not iterate over all cells; make a tree or something
+                    Scalar best_dist = std::numeric_limits<Scalar>::max();
+                    for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
+                        Scalar d = (_archive_features.col(i) - _centroids.col(j)).squaredNorm();
+                        if (d < best_dist) {
+                            best_dist = d;
+                            best_i = j;
+                        }
+                    }
+
+                    // This is the same as the for loop, but shorter
+                    // (_centroids.colwise() - _archive_features.col(i)).colwise().squaredNorm().minCoeff(&best_i);
+
+                    // We do not want to check fitness here (just re-assigning cells)
+                    ranks[i] = best_i;
+                });
+
+                // apply the new ranks
+                // We need to copy everything and re-fill
+                mat_t old_archive = _archive;
+                x_t old_archive_fit = _archive_fit;
+                mat_t old_archive_features = _archive_features;
+
+                // re-initialize features/fitness
+                _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
+                _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
+
+                for (unsigned int i = 0; i < _params.num_cells; i++) {
+                    if (ranks[i] != -1 && (old_archive_fit(i) > _archive_fit(ranks[i]))) {
+                        _archive.col(ranks[i]) = old_archive.col(i);
+                        _archive_fit(ranks[i]) = old_archive_fit(i);
+                        _archive_features.col(ranks[i]) = old_archive_features.col(i);
+                    }
+                }
+
+                int best_i;
+                _log.best_value = _archive_fit.maxCoeff(&best_i);
+                _log.best = _archive.col(best_i);
+                _log.archive_size = archive_size();
+                _log.valid_individuals.resize(_log.archive_size);
+                {
+                    unsigned int idx = 0;
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        if (valid_individual(i))
+                            _log.valid_individuals[idx++] = i;
+                    }
+                }
+
+                return _log;
             }
         };
     } // namespace algo
