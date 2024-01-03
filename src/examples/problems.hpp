@@ -57,7 +57,7 @@ namespace algevo {
             return -x.cwiseMin(max_value).cwiseMax(min_value).squaredNorm();
         }
 
-        std::pair<Scalar, feat_t> eval_qd(const x_t& x)
+        std::pair<Scalar, feat_t> eval_qd(const x_t& x, unsigned int i)
         {
             // static constexpr double scale_range = 20.;
             // static constexpr double min_x = -10.;

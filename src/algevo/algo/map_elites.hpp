@@ -288,7 +288,7 @@ namespace algevo {
                 tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
                     // TO-DO: Check how to avoid copying here
                     x_t p(_params.dim_features);
-                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i));
+                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i), i);
                     // clip in [min,max]
                     for (unsigned int j = 0; j < _params.dim_features; j++) {
                         p(j) = std::max(_params.min_feat[j], std::min(_params.max_feat[j], p(j)));
