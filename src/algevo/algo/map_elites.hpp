@@ -189,21 +189,22 @@ namespace algevo {
             //     return _recompute_archive();
             // }
 
-            void update_features(mat_t& features)
+            void update_features(const mat_t& features)
             {
                 _archive_features = features;
             }
-            void update_centroids(mat_t& centroids)
+            void update_centroids(const mat_t& centroids)
             {
                 assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
 
                 _centroids = centroids;
+                return _recompute_archive();
             }
-            void update_population(mat_t& pop)
+            void update_population(const mat_t& pop)
             {
                 _archive = pop;
             }
-            void update_fit(x_t& fit)
+            void update_fit(const x_t& fit)
             {
                 _archive_fit = fit;
             }
