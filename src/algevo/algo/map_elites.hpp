@@ -193,7 +193,7 @@ namespace algevo {
             {
                 _archive_features = features;
             }
-            void update_centroids(const mat_t& centroids)
+            IterationLog update_centroids(const mat_t& centroids)
             {
                 assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
 
