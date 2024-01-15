@@ -170,25 +170,44 @@ namespace algevo {
             mat_t& centroids() { return _centroids; }
 
             // WARNING: This is making the previous log dirty and not to be trusted! It returns a new log!
-            IterationLog set_centroids(const mat_t& centroids)
+            // IterationLog set_centroids(const mat_t& centroids)
+            // {
+            //     assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
+
+            //     _centroids = centroids;
+
+            //     return _recompute_archive();
+            // }
+            // WARNING: This is making the previous log dirty and not to be trusted! It returns a new log!
+            // IterationLog update_features(const mat_t& features)
+            // {
+            //     const unsigned int archive_sz = archive_size();
+            //     for (unsigned int i = 0; i < archive_sz; i++) {
+            //         _archive_features.col(_log.valid_individuals[i]) = features.col(i);
+            //     }
+
+            //     return _recompute_archive();
+            // }
+
+            void update_features(mat_t& features)
+            {
+                _archive_features = features;
+            }
+            void update_centroids(mat_t& centroids)
             {
                 assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
 
                 _centroids = centroids;
-
-                return _recompute_archive();
             }
-
-            // WARNING: This is making the previous log dirty and not to be trusted! It returns a new log!
-            IterationLog update_features(const mat_t& features)
+            void update_population(mat_t& pop)
             {
-                const unsigned int archive_sz = archive_size();
-                for (unsigned int i = 0; i < archive_sz; i++) {
-                    _archive_features.col(_log.valid_individuals[i]) = features.col(i);
-                }
-
-                return _recompute_archive();
+                _archive = pop;
             }
+            void update_fit(x_t& fit)
+            {
+                _archive_fit = fit;
+            }
+
 
             const mat_t& all_features() const { return _archive_features; }
             mat_t& all_features() { return _archive_features; }
