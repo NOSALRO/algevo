@@ -82,12 +82,12 @@ int main()
 
         // Example of how to update the features
         if (i == 499) {
-            auto features = map_elites.features();
-            features.col(0).setOnes();
-            features.col(10).setOnes();
-            features.col(12).setOnes();
+            // auto features = map_elites.features();
+            // features.col(0).setOnes();
+            // features.col(10).setOnes();
+            // features.col(12).setOnes();
 
-            auto log = map_elites.update_features(features);
+            // auto log = map_elites.update_features(features);
             std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
             const auto& archive = map_elites.all_features();
             for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
