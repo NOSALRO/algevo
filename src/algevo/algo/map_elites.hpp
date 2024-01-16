@@ -170,28 +170,34 @@ namespace algevo {
             mat_t& centroids() { return _centroids; }
 
             // WARNING: This is making the previous log dirty and not to be trusted! It returns a new log!
-            // IterationLog set_centroids(const mat_t& centroids)
-            // {
-            //     assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
+            IterationLog set_centroids(const mat_t& centroids)
+            {
+                assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
 
-            //     _centroids = centroids;
+                _centroids = centroids;
 
-            //     return _recompute_archive();
-            // }
+                return _recompute_archive();
+            }
+
             // WARNING: This is making the previous log dirty and not to be trusted! It returns a new log!
-            // IterationLog update_features(const mat_t& features)
-            // {
-            //     const unsigned int archive_sz = archive_size();
-            //     for (unsigned int i = 0; i < archive_sz; i++) {
-            //         _archive_features.col(_log.valid_individuals[i]) = features.col(i);
-            //     }
+            IterationLog update_features(const mat_t& features)
+            {
+                const unsigned int archive_sz = archive_size();
+                for (unsigned int i = 0; i < archive_sz; i++) {
+                    _archive_features.col(_log.valid_individuals[i]) = features.col(i);
+                }
 
-            //     return _recompute_archive();
-            // }
+                return _recompute_archive();
+            }
 
             IterationLog update_log(const mat_t& pop, const mat_t& features, const mat_t& centroids, const x_t& fit)
             {
                 assert((centroids.rows() == _params.dim_features && centroids.cols() == _params.num_cells) && "Centroids dimensions not set correctly!");
+
+                _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
+                _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
+                _archive = mat_t(_params.dim, _params.num_cells);
+
                 _archive_features = features;
                 _centroids = centroids;
                 _archive = pop;
