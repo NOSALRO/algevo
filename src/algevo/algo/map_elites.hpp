@@ -375,6 +375,107 @@ namespace algevo {
                 return _log;
             }
 
+            void step_evolution()
+            {
+                // Uniform random selection
+                for (unsigned int i = 0; i < _params.pop_size * 2; i++) {
+                    if (_log.valid_individuals.size() > _params.exploration_percentage * _params.num_cells) { // if we have enough filled niches, we select among them
+                        unsigned int idx = _log.valid_individuals.size();
+                        while (idx >= _log.valid_individuals.size())
+                            idx = _rgen_ranks.rand();
+                        _batch_ranks[i] = _log.valid_individuals[idx];
+                    }
+                    else
+                        _batch_ranks[i] = _rgen_ranks.rand(); // else we select from all the map!
+                    // if not a filled niche, resample to increase exploration
+                    if (!valid_individual(_batch_ranks[i])) {
+                        for (unsigned int j = 0; j < _params.dim; j++) {
+                            Scalar range = (_params.max_value[j] - _params.min_value[j]);
+                            _archive(j, _batch_ranks[i]) = _rgen.rand() * range + _params.min_value[j];
+                        }
+                    }
+                }
+
+                // Crossover - line variation
+                for (unsigned int i = 0; i < _params.pop_size; i++)
+                    _batch.col(i) = _archive.col(_batch_ranks[i * 2]) + _params.sigma_2 * _rgen_gauss.rand() * (_archive.col(_batch_ranks[i * 2]) - _archive.col(_batch_ranks[i * 2 + 1]));
+
+                // Gaussian mutation
+                for (unsigned int i = 0; i < _params.pop_size; i++)
+                    for (unsigned int j = 0; j < _params.dim; j++) {
+                        _batch(j, i) += _rgen_gauss.rand() * _params.sigma_1;
+                        // clip in [min,max]
+                        _batch(j, i) = std::max(_params.min_value[j], std::min(_params.max_value[j], _batch(j, i)));
+                    }
+
+                // evaluate the batch
+                tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
+                    // TO-DO: Check how to avoid copying here
+                    x_t p(_params.dim_features);
+                    std::tie(_batch_fit(i), p) = _fit_evals[i].eval_qd(_batch.col(i), i);
+                });
+            }
+
+            IterationLog step_update(mat_t& p)
+            {
+                tools::parallel_loop(0, _params.pop_size, [this, &p](unsigned int i) {
+                    for (unsigned int j = 0; j < _params.dim_features; j++) {
+                        // clip in [min,max]
+                        p(i, j) = std::max(_params.min_feat[j], std::min(_params.max_feat[j], p(i, j)));
+                    }
+                    _batch_features.col(i) = p.row(i);
+                });
+
+                // competition
+                std::fill(_new_rank.begin(), _new_rank.end(), -1);
+                tools::parallel_loop(0, _params.pop_size, [this](unsigned int i) {
+                    // search for the closest centroid / the grid
+                    int best_i = -1;
+                    // TO-DO: Do not iterate over all cells; make a tree or something
+                    Scalar best_dist = std::numeric_limits<Scalar>::max();
+                    for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
+                        Scalar d = (_batch_features.col(i) - _centroids.col(j)).squaredNorm();
+                        if (d < best_dist) {
+                            best_dist = d;
+                            best_i = j;
+                        }
+                    }
+
+                    // This is the same as the for loop, but shorter
+                    // (_centroids.colwise() - _batch_features.col(i)).colwise().squaredNorm().minCoeff(&best_i);
+
+                    if (_batch_fit(i) > _archive_fit(best_i))
+                        _new_rank[i] = best_i;
+                });
+
+                // apply the new ranks
+                for (unsigned int i = 0; i < _params.pop_size; i++) {
+                    if (_new_rank[i] != -1 && (_batch_fit(i) > _archive_fit(_new_rank[i]))) {
+                        _archive.col(_new_rank[i]) = _batch.col(i);
+                        _archive_fit(_new_rank[i]) = _batch_fit(i);
+                        _archive_features.col(_new_rank[i]) = _batch_features.col(i);
+                    }
+                }
+
+                // Update iteration log
+                _log.iterations++;
+                _log.func_evals += _params.pop_size;
+                int best_i;
+                _log.best_value = _archive_fit.maxCoeff(&best_i);
+                _log.best = _archive.col(best_i);
+                _log.archive_size = archive_size();
+                _log.valid_individuals.resize(_log.archive_size);
+                {
+                    unsigned int idx = 0;
+                    for (unsigned int i = 0; i < _params.num_cells; i++) {
+                        if (valid_individual(i))
+                            _log.valid_individuals[idx++] = i;
+                    }
+                }
+
+                return _log;
+            }
+
         protected:
             // Parameters
             Params _params;

@@ -24,6 +24,14 @@ def build(bld):
 
     bld.program(features = 'cxx',
                 install_path = None,
+                source = 'sphere_map_elites_sep.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'sphere_map_elites_sep')
+
+    bld.program(features = 'cxx',
+                install_path = None,
                 source = 'sphere_de.cpp',
                 includes = '. .. ../../',
                 uselib = libs,
