@@ -301,7 +301,7 @@ namespace algevo {
                     bool add_to_container = true;
                     std::vector<int> neighbors;
                     for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
-                        if(valid_individual(j)) {
+                        if (valid_individual(j)) {
                             Scalar d = (_batch_features.col(i) - _archive_features.col(j)).squaredNorm();
                             if (d < _params.min_dist) {
                                 neighbors.push_back(j);
@@ -321,15 +321,18 @@ namespace algevo {
 
                         for (int j = 0; j < static_cast<int>(neighbors.size()); j++) {
                             _archive_fit(neighbors[j]) = -std::numeric_limits<Scalar>::max();
-                            _archive_features.col(neighbors[j]) = x_t::Constant((_params.dim_features, -std::numeric_limits<Scalar>::max()));
+                            _archive_features.col(neighbors[j]) = x_t::Constant(_params.dim_features, -std::numeric_limits<Scalar>::max());
                         }
                         _new_rank[i] = best_i;
                     }
                     else {
-                        _new_rank[i] = (_archive.array() == -std::numeric_limits<Scalar>::max()).template cast<int>().indexOf(1);
+                        for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
+                            if (!valid_individual(j)) {
+                                _new_rank[i] = j;
+                                break;
+                            }
+                        }
                     }
-
-
                 });
 
                 // apply the new ranks
@@ -359,7 +362,6 @@ namespace algevo {
 
                 return _log;
             }
-
 
         protected:
             // Parameters
