@@ -398,7 +398,7 @@ namespace algevo {
 
             void _allocate_data()
             {
-                // _params.num_cells = 2 * _params.num_cells;
+                _params.num_cells = 2 * _params.num_cells;
                 _archive = mat_t(_params.dim, _params.num_cells);
                 _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
                 _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());

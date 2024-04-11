@@ -56,10 +56,9 @@ namespace algevo {
         std::pair<Scalar, feat_t> eval_qd(const x_t& x, unsigned int i)
         {
             Scalar A = 10.0;
-            Scalar sum = 0.0;
             Scalar x0 = x[0] * x[0] - A * cos(2.0 * M_PI * x[0]);
             Scalar x1 = x[1] * x[1] - A * cos(2.0 * M_PI * x[1]);
-            return {-(10*2 + x0 + x1), x};
+            return {-(A*x.size() + x0 + x1), x};
         }
     };
 
