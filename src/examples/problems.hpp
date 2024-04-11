@@ -42,6 +42,28 @@ namespace global {
 
 namespace algevo {
     template <typename Scalar = double>
+    struct Rastrigin2D {
+        static constexpr unsigned int dim = 2;
+        static constexpr unsigned int dim_features = 2;
+        static constexpr double max_value = 5.12;
+        static constexpr double min_value = -5.12;
+        static constexpr double max_features_value = 5.12;
+        static constexpr double min_features_value = -5.12;
+
+        using x_t = Eigen::Matrix<Scalar, 1, dim>;
+        using feat_t = Eigen::Matrix<Scalar, 1, dim_features>;
+
+        std::pair<Scalar, feat_t> eval_qd(const x_t& x, unsigned int i)
+        {
+            Scalar A = 10.0;
+            Scalar sum = 0.0;
+            Scalar x0 = x[0] * x[0] - A * cos(2.0 * M_PI * x[0]);
+            Scalar x1 = x[1] * x[1] - A * cos(2.0 * M_PI * x[1]);
+            return {-(10*2 + x0 + x1), x};
+        }
+    };
+
+    template <typename Scalar = double>
     struct FitSphere {
         static constexpr unsigned int dim = 20;
         static constexpr unsigned int dim_features = dim;

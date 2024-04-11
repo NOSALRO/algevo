@@ -33,41 +33,33 @@
 //|
 #include <iostream>
 
-#include <algevo/algo/map_elites.hpp>
+#include <algevo/algo/unstructured_map_elites.hpp>
 #include <algevo/tools/cvt.hpp>
 
 #include "problems.hpp"
 
 // Typedefs
-using FitSphere = algevo::FitSphere<>;
-using Algo = algevo::algo::MapElites<FitSphere>;
+using Rastrigin = algevo::Rastrigin2D<>;
+using Algo = algevo::algo::MapElites<Rastrigin>;
 using Params = Algo::Params;
 
 int main()
 {
     std::srand(time(0));
+    algevo::tools::parallel_init(1);
     // Set parameters
     Params params;
-    params.dim = FitSphere::dim;
-    params.dim_features = FitSphere::dim_features;
+    params.dim = Rastrigin::dim;
+    params.dim_features = Rastrigin::dim_features;
     params.pop_size = (params.dim > 100) ? params.dim : 128;
     params.num_cells = 20;
-    params.max_value = Algo::x_t::Constant(params.dim, FitSphere::max_value);
-    params.min_value = Algo::x_t::Constant(params.dim, FitSphere::min_value);
-    params.max_feat = Algo::x_t::Constant(params.dim, FitSphere::max_features_value);
-    params.min_feat = Algo::x_t::Constant(params.dim, FitSphere::min_features_value);
+    params.min_dist = 0.2;
+    params.max_value = Algo::x_t::Constant(params.dim, Rastrigin::max_value);
+    params.min_value = Algo::x_t::Constant(params.dim, Rastrigin::min_value);
+    params.max_feat = Algo::x_t::Constant(params.dim, Rastrigin::max_features_value);
+    params.min_feat = Algo::x_t::Constant(params.dim, Rastrigin::min_features_value);
     params.sigma_1 = 0.1; // 0.005;
     params.sigma_2 = 0.3;
-
-    // Compute centroids via CVT
-    // It can take some while, if num_cells is big
-    unsigned int num_points = params.num_cells * 100;
-    Eigen::MatrixXd data = (Eigen::MatrixXd::Random(params.dim_features, num_points) + Eigen::MatrixXd::Constant(params.dim_features, num_points, 1.)) / 2.;
-    algevo::tools::KMeans<> k(100, 1, 1e-4);
-    // Set centroids
-    params.centroids = k.cluster(data, params.num_cells);
-    for (unsigned int c = 0; c < params.centroids.cols(); c++)
-        params.centroids.col(c).array() = params.centroids.col(c).array() * (params.max_feat - params.min_feat).array() + params.min_feat.array();
 
     // Instantiate algorithm
     Algo map_elites(params);
@@ -76,16 +68,27 @@ int main()
         auto log = map_elites.step();
         std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
         const auto& archive = map_elites.all_features();
-        for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
-            std::cout << "    " << j << ": " << archive.col(log.valid_individuals[j]).transpose() << std::endl;
-        }
+        // for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
+        //     std::cout << "    " << j << ": " << archive.col(log.valid_individuals[j]).transpose() << std::endl;
+        // }
 
         // Example of how to update the features
         if (i == 499) {
-            std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
+            // std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
+            int c = 0;
             const auto& archive = map_elites.all_features();
             for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
+                for (unsigned int k = 0; k < log.valid_individuals.size(); k++) {
+                    double d = (archive.col(log.valid_individuals[j]) - archive.col(log.valid_individuals[k])).squaredNorm();
+                    if ((k != j) && (d < params.min_dist)) {
+                        c++;
+                    }
+                }
+            }
+            std::cout << c << std::endl;
+            for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
                 std::cout << "    " << j << ": " << archive.col(log.valid_individuals[j]).transpose() << std::endl;
+                // std::cout << archive.col(log.valid_individuals[j]).transpose() << std::endl;
             }
         }
     }

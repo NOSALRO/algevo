@@ -32,6 +32,30 @@ def build(bld):
 
     bld.program(features = 'cxx',
                 install_path = None,
+                source = 'sphere_unstructured_map_elites.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'sphere_unstructured_map_elites')
+
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'rastrigin_map_elites.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'rastrigin_map_elites')
+
+    bld.program(features = 'cxx',
+                install_path = None,
+                source = 'rastrigin_unstructured_map_elites.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'rastrigin_unstructured_map_elites')
+
+    bld.program(features = 'cxx',
+                install_path = None,
                 source = 'sphere_de.cpp',
                 includes = '. .. ../../',
                 uselib = libs,

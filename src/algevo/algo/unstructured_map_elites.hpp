@@ -88,7 +88,7 @@ namespace algevo {
                 unsigned int dim_features = 0;
                 unsigned int pop_size = 0;
                 unsigned int num_cells = 0;
-                float min_dist = 0.15;
+                float min_dist = 0.2;
 
                 Scalar exploration_percentage = 0.1;
 
@@ -311,19 +311,23 @@ namespace algevo {
                     }
 
                     if (!add_to_container) {
+                        int wins = 0;
                         int best_i = -1;
                         for (int j = 0; j < static_cast<int>(neighbors.size()); j++) {
                             if (_batch_fit(i) > _archive_fit(neighbors[j])) {
                                 best_i = neighbors[j];
-                                break;
+                                wins++;
                             }
                         }
 
-                        for (int j = 0; j < static_cast<int>(neighbors.size()); j++) {
-                            _archive_fit(neighbors[j]) = -std::numeric_limits<Scalar>::max();
-                            _archive_features.col(neighbors[j]) = x_t::Constant(_params.dim_features, -std::numeric_limits<Scalar>::max());
+                        if (wins == static_cast<int>(neighbors.size())) {
+                            for (int j = 0; j < static_cast<int>(neighbors.size()); j++) {
+                                _archive.col(neighbors[j]) = x_t::Constant(_params.dim, -std::numeric_limits<Scalar>::max());
+                                _archive_fit(neighbors[j]) = -std::numeric_limits<Scalar>::max();
+                                _archive_features.col(neighbors[j]) = x_t::Constant(_params.dim_features, -std::numeric_limits<Scalar>::max());
+                            }
+                            _new_rank[i] = best_i;
                         }
-                        _new_rank[i] = best_i;
                     }
                     else {
                         for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
@@ -394,7 +398,7 @@ namespace algevo {
 
             void _allocate_data()
             {
-                _params.num_cells = 2 * _params.num_cells;
+                // _params.num_cells = 2 * _params.num_cells;
                 _archive = mat_t(_params.dim, _params.num_cells);
                 _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
                 _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
