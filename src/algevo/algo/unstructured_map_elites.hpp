@@ -162,7 +162,7 @@ namespace algevo {
                 return _recompute_archive();
             }
 
-            IterationLog update_log(const mat_t& pop, const mat_t& features, const mat_t& centroids, const x_t& fit)
+            IterationLog update_log(const mat_t& pop, const mat_t& features, const x_t& fit)
             {
                 _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
                 _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
@@ -414,9 +414,6 @@ namespace algevo {
                     _batch_features.col(i) = p.row(i);
                 });
 
-                for (unsigned int i = 0; i < _params.pop_size; i++) {
-                    std::cout << p.row(i) << std::endl;
-                }
                 // competition
                 std::fill(_new_rank.begin(), _new_rank.end(), -1);
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
