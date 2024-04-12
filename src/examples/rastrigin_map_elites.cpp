@@ -32,6 +32,7 @@
 //|    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //|
 #include <iostream>
+#include <fstream>
 
 #include <algevo/algo/map_elites.hpp>
 #include <algevo/tools/cvt.hpp>

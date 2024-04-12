@@ -40,7 +40,7 @@
 #include "problems.hpp"
 
 // Typedefs
-using Rastrigin = algevo::Rastrigin2D<>;
+using Rastrigin = algevo::Rastrigin2DSep<>;
 using Algo = algevo::algo::MapElites<Rastrigin>;
 using Params = Algo::Params;
 
@@ -60,12 +60,14 @@ int main()
     params.min_feat = Algo::x_t::Constant(params.dim, Rastrigin::min_features_value);
     params.sigma_1 = 0.1; // 0.005;
     params.sigma_2 = 0.3;
+    global::feat_collector.resize(params.pop_size, params.dim_features);
 
     // Instantiate algorithm
     Algo map_elites(params);
 
     for (unsigned int i = 0; i < 500; i++) {
-        auto log = map_elites.step();
+        map_elites.step_evolution();
+        auto log = map_elites.step_update(global::feat_collector);
         std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
         const auto& archive = map_elites.all_features();
         for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
@@ -74,7 +76,17 @@ int main()
 
         // Example of how to update the features
         if (i == 499) {
-            std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
+            // std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
+            int c = 0;
+            const auto& archive = map_elites.all_features();
+            for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
+                for (unsigned int k = 0; k < log.valid_individuals.size(); k++) {
+                    double d = (archive.col(log.valid_individuals[j]) - archive.col(log.valid_individuals[k])).squaredNorm();
+                    if ((k != j) && (d < params.min_dist)) {
+                        c++;
+                    }
+                }
+            }
             for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
                 std::cout << "    " << j << ": " << archive.col(log.valid_individuals[j]).transpose() << std::endl;
             }
