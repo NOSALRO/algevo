@@ -88,7 +88,7 @@ namespace algevo {
                 unsigned int dim_features = 0;
                 unsigned int pop_size = 0;
                 unsigned int num_cells = 0;
-                float min_dist = 0.2;
+                double min_dist = 0.2;
 
                 Scalar exploration_percentage = 0.1;
 
@@ -133,6 +133,7 @@ namespace algevo {
                 }
             }
 
+            Params& params() { return _params; }
             const mat_t& population() const { return _archive; }
             mat_t& population() { return _archive; }
 
