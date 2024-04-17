@@ -88,7 +88,7 @@ namespace algevo {
                 unsigned int dim_features = 0;
                 unsigned int pop_size = 0;
                 unsigned int num_cells = 0;
-                unsigned int num_cells_mult = 4;
+                // unsigned int num_cells_mult = 4;
                 double min_dist = 0.2;
                 double min_dist_min = 1e-05;
                 double min_dist_max = 1e+05;
@@ -548,7 +548,7 @@ namespace algevo {
 
             void _allocate_data()
             {
-                _params.num_cells = _params.num_cells_mult * _params.num_cells;
+                // _params.num_cells = _params.num_cells_mult * _params.num_cells;
                 _archive = mat_t(_params.dim, _params.num_cells);
                 _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
                 _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
