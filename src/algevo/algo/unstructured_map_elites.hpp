@@ -88,7 +88,10 @@ namespace algevo {
                 unsigned int dim_features = 0;
                 unsigned int pop_size = 0;
                 unsigned int num_cells = 0;
+                unsigned int num_cells_mult = 4;
                 double min_dist = 0.2;
+                double min_dist_min = 1e-05;
+                double min_dist_max = 1e+05;
 
                 Scalar exploration_percentage = 0.1;
 
@@ -248,6 +251,36 @@ namespace algevo {
                         sz++;
                 }
                 return sz;
+            }
+
+            void VAT(int target, Scalar K)
+            {
+                Scalar max_dist = -std::numeric_limits<Scalar>::max();
+                int n = _archive_features.col(0).size();
+                for (int i = 0; i < static_cast<int>(_params.num_cells); i++) {
+                    if (valid_individual(i)) {
+                        for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
+                            if ( i != j && valid_individual(j)) {
+                                Scalar d = (_archive_features.col(i) - _archive_features.col(j)).squaredNorm();
+                                max_dist = std::max(max_dist, d);
+                            }
+                        }
+                    }
+                }
+                 _params.min_dist = std::max(_params.min_dist_min, std::min(_params.min_dist_max, max_dist / std::pow((K * target), 1/static_cast<Scalar>(n))));
+            }
+
+            void CSC(int target, Scalar K)
+            {
+                 _params.min_dist = std::max(_params.min_dist_min, std::min(_params.min_dist_max, _params.min_dist * (1 + K * (archive_size() - target))));
+            }
+
+            void update_min_dist(int target, Scalar K, const std::string& method = "CSC")
+            {
+                 if (method == "CSC")
+                     CSC(target, K);
+                 else if (method == "VAT")
+                     VAT(target, K);
             }
 
             IterationLog step()
@@ -515,7 +548,7 @@ namespace algevo {
 
             void _allocate_data()
             {
-                _params.num_cells = 2 * _params.num_cells;
+                _params.num_cells = _params.num_cells_mult * _params.num_cells;
                 _archive = mat_t(_params.dim, _params.num_cells);
                 _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
                 _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());

@@ -67,7 +67,9 @@ int main()
 
     for (unsigned int i = 0; i < 500; i++) {
         map_elites.step_evolution();
+        std::cout << map_elites.params().min_dist << std::endl;
         auto log = map_elites.step_update(global::feat_collector);
+        map_elites.update_min_dist(10, 0.0001, "CSC");
         std::cout << log.iterations << "(" << log.func_evals << "): " << log.best_value << " -> archive size: " << log.archive_size << std::endl;
         const auto& archive = map_elites.all_features();
         for (unsigned int j = 0; j < log.valid_individuals.size(); j++) {
