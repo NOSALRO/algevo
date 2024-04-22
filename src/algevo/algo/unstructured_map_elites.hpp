@@ -272,7 +272,8 @@ namespace algevo {
 
             void CSC(int target, Scalar K)
             {
-                 _params.min_dist = std::max(_params.min_dist_min, std::min(_params.min_dist_max, _params.min_dist * (1 + K * (archive_size() - target))));
+                _params.min_dist = _params.min_dist * (1 + (K * (static_cast<int>(archive_size()) - target)));
+                _params.min_dist = std::max(_params.min_dist_min, std::min(_params.min_dist_max, _params.min_dist));
             }
 
             void update_min_dist(int target, Scalar K, const std::string& method = "CSC")
