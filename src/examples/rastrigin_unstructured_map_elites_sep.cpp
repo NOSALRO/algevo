@@ -41,7 +41,7 @@
 
 // Typedefs
 using Rastrigin = algevo::Rastrigin2DSep<>;
-using Algo = algevo::algo::MapElites<Rastrigin>;
+using Algo = algevo::algo::UnstructuredMapElites<Rastrigin>;
 using Params = Algo::Params;
 
 int main()

@@ -40,7 +40,7 @@
 
 // Typedefs
 using FitSphere = algevo::FitSphere<>;
-using Algo = algevo::algo::MapElites<FitSphere>;
+using Algo = algevo::algo::UnstructuredMapElites<FitSphere>;
 using Params = Algo::Params;
 
 int main()

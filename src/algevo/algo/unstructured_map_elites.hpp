@@ -69,7 +69,7 @@ namespace algevo {
         // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         /// END OF LICENSE
         template <typename Fit, typename Scalar = double>
-        class MapElites {
+        class UnstructuredMapElites {
         public:
             using mat_t = Eigen::Matrix<Scalar, -1, -1>;
             using x_t = Eigen::Matrix<Scalar, -1, 1>;
@@ -116,7 +116,7 @@ namespace algevo {
                 std::vector<unsigned int> valid_individuals;
             };
 
-            MapElites(const Params& params) : _params(params), _rgen(0., 1., params.seed), _rgen_ranks(0, params.num_cells - 1, params.seed)
+            UnstructuredMapElites(const Params& params) : _params(params), _rgen(0., 1., params.seed), _rgen_ranks(0, params.num_cells - 1, params.seed)
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim > 0 && "Dimensions not set!");
