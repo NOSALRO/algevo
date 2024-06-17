@@ -8,6 +8,14 @@ def build(bld):
 
     bld.program(features = 'cxx',
                 install_path = None,
+                source = 'cem_discrete.cpp',
+                includes = '. .. ../../',
+                uselib = libs,
+                cxxflags = cxxflags,
+                target = 'cem_discrete')
+
+    bld.program(features = 'cxx',
+                install_path = None,
                 source = 'sphere_pso.cpp',
                 includes = '. .. ../../',
                 uselib = libs,
