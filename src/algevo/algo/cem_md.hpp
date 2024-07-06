@@ -80,7 +80,8 @@ public:
         _rgen(0., 1., params.seed), _colored_rgen(params.seed) {
     assert(_params.pop_size > 0 &&
            "Population size needs to be bigger than zero!");
-    assert(_params.dim > 0 && "Dimensions not set!");
+    assert(_params.dim_discrete > 0 && _params.dim_continuous > 0 &&
+           "Dimensions not set!");
     assert(_params.num_elites > 0 && _params.num_elites <= _params.pop_size &&
            "Number of elites is wrongly set!");
 
