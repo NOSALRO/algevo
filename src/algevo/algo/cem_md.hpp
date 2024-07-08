@@ -138,7 +138,9 @@ public:
 
   const xc_t &population_fit() const { return _population_fit; }
 
-  // const x_t &best() const { return _best; }
+  const xd_t best_discrete() const { return _best_discrete; }
+  const xc_t best_continuous() const { return _best_continuous; }
+
   Scalar best_value() const { return _fit_best; }
 
 protected:
