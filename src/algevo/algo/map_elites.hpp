@@ -343,13 +343,13 @@ namespace algevo {
                     // This is the same as the for loop, but shorter
                     // (_centroids.colwise() - _batch_features.col(i)).colwise().squaredNorm().minCoeff(&best_i);
 
-                    if (_batch_fit(i) > _archive_fit(best_i))
+                    if (_ignore_reward || (_batch_fit(i) > _archive_fit(best_i)))
                         _new_rank[i] = best_i;
                 });
 
                 // apply the new ranks
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
-                    if (_new_rank[i] != -1 && (_batch_fit(i) > _archive_fit(_new_rank[i]))) {
+                    if (_new_rank[i] != -1 && (_ignore_reward || (_batch_fit(i) > _archive_fit(_new_rank[i])))) {
                         _archive.col(_new_rank[i]) = _batch.col(i);
                         _archive_fit(_new_rank[i]) = _batch_fit(i);
                         _archive_features.col(_new_rank[i]) = _batch_features.col(i);
@@ -444,13 +444,15 @@ namespace algevo {
                     // This is the same as the for loop, but shorter
                     // (_centroids.colwise() - _batch_features.col(i)).colwise().squaredNorm().minCoeff(&best_i);
 
-                    if (_batch_fit(i) > _archive_fit(best_i))
+                    if (_ignore_reward || (_batch_fit(i) > _archive_fit(best_i)))
+                    // if ((!_ignore_reward && (_batch_fit(i) > _archive_fit(best_i))) || !valid_individual(best_i))
                         _new_rank[i] = best_i;
                 });
 
                 // apply the new ranks
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
-                    if (_new_rank[i] != -1 && (_batch_fit(i) > _archive_fit(_new_rank[i]))) {
+                    if (_new_rank[i] != -1 && (_ignore_reward || (_batch_fit(i) > _archive_fit(_new_rank[i])))) {
+                    // if (_new_rank[i] != -1 && ((!_ignore_reward && (_batch_fit(i) > _archive_fit(_new_rank[i]))) || !valid_individual(_new_rank[i]))) {
                         _archive.col(_new_rank[i]) = _batch.col(i);
                         _archive_fit(_new_rank[i]) = _batch_fit(i);
                         _archive_features.col(_new_rank[i]) = _batch_features.col(i);
@@ -474,6 +476,11 @@ namespace algevo {
                 }
 
                 return _log;
+            }
+
+            void ignore_reward(bool v)
+            {
+                _ignore_reward = v;
             }
 
         protected:
@@ -505,6 +512,7 @@ namespace algevo {
             rgen_scalar_t _rgen;
             tools::rgen_int_t _rgen_ranks;
             rgen_scalar_gauss_t _rgen_gauss = rgen_scalar_gauss_t(static_cast<Scalar>(0.), static_cast<Scalar>(1.));
+            bool _ignore_reward = false;
 
             void _allocate_data()
             {
@@ -561,7 +569,8 @@ namespace algevo {
                 _archive_fit = x_t::Constant(_params.num_cells, -std::numeric_limits<Scalar>::max());
 
                 for (unsigned int i = 0; i < _params.num_cells; i++) {
-                    if (ranks[i] != -1 && (old_archive_fit(i) > _archive_fit(ranks[i]))) {
+                    if (ranks[i] != -1 && (_ignore_reward || (old_archive_fit(i) > _archive_fit(ranks[i])))) {
+                    // if (_new_rank[i] != -1 && ((!_ignore_reward && (_batch_fit(i) > _archive_fit(ranks[i]))) || !valid_individual(ranks[i]))) {
                         _archive.col(ranks[i]) = old_archive.col(i);
                         _archive_fit(ranks[i]) = old_archive_fit(i);
                         _archive_features.col(ranks[i]) = old_archive_features.col(i);
