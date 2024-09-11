@@ -335,10 +335,14 @@ namespace algevo {
                     // search for the closest centroid / the grid
                     bool add_to_container = true;
                     std::vector<int> neighbors;
+                    int closest = -1;
+                    int closest_dist = -std::numeric_limits<Scalar>::max();
                     for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
                         if (valid_individual(j)) {
                             Scalar d = (_batch_features.col(i) - _archive_features.col(j)).squaredNorm();
                             if (d < _params.min_dist) {
+                                closest_dist = (d < closest_dist) ? d : closest_dist;
+                                closest = (d < closest_dist) ? j : closest;
                                 neighbors.push_back(j);
                                 add_to_container = false;
                             }
@@ -365,10 +369,17 @@ namespace algevo {
                         }
                     }
                     else {
-                        for (unsigned int j = 0; j < _params.num_cells; j++) {
-                            if (!valid_individual(j)) {
-                                _new_rank[i] = j;
-                                break;
+                        if (archive_size() == _params.num_cells) {
+                            if (_ignore_reward || (_batch_fit(i) > _archive_fit(closest))) {
+                                _new_rank[i] = closest;
+                            }
+                        }
+                        else {
+                            for (unsigned int j = 0; j < _params.num_cells; j++) {
+                                if (!valid_individual(j)) {
+                                    _new_rank[i] = j;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -455,10 +466,14 @@ namespace algevo {
                     // search for the closest centroid / the grid
                     bool add_to_container = true;
                     std::vector<int> neighbors;
+                    int closest = -1;
+                    int closest_dist = -std::numeric_limits<Scalar>::max();
                     for (int j = 0; j < static_cast<int>(_params.num_cells); j++) {
                         if (valid_individual(j)) {
                             Scalar d = (_batch_features.col(i) - _archive_features.col(j)).squaredNorm();
                             if (d < _params.min_dist) {
+                                closest_dist = (d < closest_dist) ? d : closest_dist;
+                                closest = (d < closest_dist) ? j : closest;
                                 neighbors.push_back(j);
                                 add_to_container = false;
                             }
@@ -486,10 +501,17 @@ namespace algevo {
                         }
                     }
                     else {
-                        for (unsigned int j = 0; j < _params.num_cells; j++) {
-                            if (!valid_individual(j)) {
-                                _new_rank[i] = j;
-                                break;
+                        if (archive_size() == _params.num_cells) {
+                            if (_ignore_reward || (_batch_fit(i) > _archive_fit(closest))) {
+                                _new_rank[i] = closest;
+                            }
+                        }
+                        else {
+                            for (unsigned int j = 0; j < _params.num_cells; j++) {
+                                if (!valid_individual(j)) {
+                                    _new_rank[i] = j;
+                                    break;
+                                }
                             }
                         }
                     }
