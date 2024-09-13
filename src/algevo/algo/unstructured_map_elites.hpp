@@ -41,6 +41,8 @@
 
 #include <algevo/tools/parallel.hpp>
 #include <algevo/tools/random.hpp>
+#include <tbb/parallel_reduce.h>
+
 
 namespace algevo {
     namespace algo {
@@ -349,22 +351,26 @@ namespace algevo {
                         }
                     }
 
+                    // std::vector<int> wins(neighbors.size());
                     if (!add_to_container) {
-                        int wins = 0;
                         int best_i = -1;
-                        for (unsigned int j = 0; j < neighbors.size(); j++) {
-                            if (_ignore_reward || (_batch_fit(i) > _archive_fit(neighbors[j]))) {
-                                best_i = neighbors[j];
-                                wins++;
-                            }
-                        }
+                        int wins = tbb::parallel_reduce(tbb::blocked_range<int>(0, neighbors.size()), 0, [this, i, &best_i, &neighbors](tbb::blocked_range<int> r, int _wins) {
+                                for (int j = r.begin(); j < r.end(); ++j) {
+                                    if (_ignore_reward || (_batch_fit(i) > _archive_fit(neighbors[j]))) {
+                                        best_i = neighbors[j];
+                                        _wins++;
+                                    }
+                                }
+                                return _wins; }, std::plus<int>());
 
                         if (wins == static_cast<int>(neighbors.size())) {
-                            for (int j = 0; j < static_cast<int>(neighbors.size()); j++) {
-                                _archive.col(neighbors[j]) = x_t::Constant(_params.dim, -std::numeric_limits<Scalar>::max());
-                                _archive_fit(neighbors[j]) = -std::numeric_limits<Scalar>::max();
-                                _archive_features.col(neighbors[j]) = x_t::Constant(_params.dim_features, -std::numeric_limits<Scalar>::max());
-                            }
+                            tbb::parallel_for(tbb::blocked_range<int>(0, neighbors.size()), [this, &neighbors](tbb::blocked_range<int> r) {
+                                for (int j = r.begin(); j < r.end(); ++j) {
+                                    _archive.col(neighbors[j]) = x_t::Constant(_params.dim, -std::numeric_limits<Scalar>::max());
+                                    _archive_fit(neighbors[j]) = -std::numeric_limits<Scalar>::max();
+                                    _archive_features.col(neighbors[j]) = x_t::Constant(_params.dim_features, -std::numeric_limits<Scalar>::max());
+                                }
+                            });
                             _new_rank[i] = best_i;
                         }
                     }
@@ -481,22 +487,24 @@ namespace algevo {
                     }
 
                     if (!add_to_container) {
-                        int wins = 0;
                         int best_i = -1;
-                        for (unsigned int j = 0; j < neighbors.size(); j++) {
-                            if (_ignore_reward || (_batch_fit(i) > _archive_fit(neighbors[j]))) {
-                            // if ((!_ignore_reward && (_batch_fit(i) > _archive_fit(best_i))) || !valid_individual(best_i))
-                                best_i = neighbors[j];
-                                wins++;
-                            }
-                        }
+                        int wins = tbb::parallel_reduce(tbb::blocked_range<int>(0, neighbors.size()), 0, [this, i, &best_i, &neighbors](tbb::blocked_range<int> r, int _wins) {
+                                for (int j = r.begin(); j < r.end(); ++j) {
+                                    if (_ignore_reward || (_batch_fit(i) > _archive_fit(neighbors[j]))) {
+                                        best_i = neighbors[j];
+                                        _wins++;
+                                    }
+                                }
+                                return _wins; }, std::plus<int>());
 
                         if (wins == static_cast<int>(neighbors.size())) {
-                            for (int j = 0; j < static_cast<int>(neighbors.size()); j++) {
-                                _archive.col(neighbors[j]) = x_t::Constant(_params.dim, -std::numeric_limits<Scalar>::max());
-                                _archive_fit(neighbors[j]) = -std::numeric_limits<Scalar>::max();
-                                _archive_features.col(neighbors[j]) = x_t::Constant(_params.dim_features, -std::numeric_limits<Scalar>::max());
-                            }
+                            tbb::parallel_for(tbb::blocked_range<int>(0, neighbors.size()), [this, &neighbors](tbb::blocked_range<int> r) {
+                                for (int j = r.begin(); j < r.end(); ++j) {
+                                    _archive.col(neighbors[j]) = x_t::Constant(_params.dim, -std::numeric_limits<Scalar>::max());
+                                    _archive_fit(neighbors[j]) = -std::numeric_limits<Scalar>::max();
+                                    _archive_features.col(neighbors[j]) = x_t::Constant(_params.dim_features, -std::numeric_limits<Scalar>::max());
+                                }
+                            });
                             _new_rank[i] = best_i;
                         }
                     }
@@ -516,7 +524,6 @@ namespace algevo {
                         }
                     }
                     if (_new_rank[i] != -1) {
-                    // if (_new_rank[i] != -1 && ((!_ignore_reward && (_batch_fit(i) > _archive_fit(_new_rank[i]))) || !valid_individual(_new_rank[i]))) {
                         _archive.col(_new_rank[i]) = _batch.col(i);
                         _archive_fit(_new_rank[i]) = _batch_fit(i);
                         _archive_features.col(_new_rank[i]) = _batch_features.col(i);
