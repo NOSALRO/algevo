@@ -1,10 +1,11 @@
 //|
-//|    Copyright (c) 2022-2024 Computational Intelligence Lab, University of Patras, Greece
-//|    Copyright (c) 2023-2024 Laboratory of Automation and Robotics, University of Patras, Greece
-//|    Copyright (c) 2022-2024 Konstantinos Chatzilygeroudis
+//|    Copyright (c) 2022-2025 Computational Intelligence Lab, University of Patras, Greece
+//|    Copyright (c) 2023-2025 Laboratory of Automation and Robotics, University of Patras, Greece
+//|    Copyright (c) 2022-2025 Konstantinos Chatzilygeroudis
 //|    Authors:  Konstantinos Chatzilygeroudis
 //|    email:    costashatz@gmail.com
 //|    website:  https://nosalro.github.io/
+//|              https://lar.upatras.gr/
 //|              http://cilab.math.upatras.gr/
 //|
 //|    This file is part of algevo.
