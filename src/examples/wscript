@@ -59,6 +59,16 @@ def build(bld):
     bld.program(
         features="cxx",
         install_path=None,
+        source="sphere_ga.cpp",
+        includes=". .. ../../",
+        uselib=libs,
+        cxxflags=cxxflags,
+        target="sphere_ga",
+    )
+
+    bld.program(
+        features="cxx",
+        install_path=None,
         source="sphere_cem.cpp",
         includes=". .. ../../",
         uselib=libs,

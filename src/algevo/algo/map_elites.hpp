@@ -92,8 +92,8 @@ namespace algevo {
 
                 Scalar exploration_percentage = 0.1;
 
-                Scalar sigma_1 = static_cast<Scalar>(0.005);
-                Scalar sigma_2 = static_cast<Scalar>(0.3);
+                Scalar sigma_1 = static_cast<Scalar>(0.01);
+                Scalar sigma_2 = static_cast<Scalar>(0.2);
 
                 x_t min_value;
                 x_t max_value;
@@ -304,7 +304,7 @@ namespace algevo {
 
                 // Crossover - line variation
                 for (unsigned int i = 0; i < _params.pop_size; i++)
-                    _batch.col(i) = _archive.col(_batch_ranks[i * 2]) + _params.sigma_2 * _rgen_gauss.rand() * (_archive.col(_batch_ranks[i * 2]) - _archive.col(_batch_ranks[i * 2 + 1]));
+                    _batch.col(i) = _archive.col(_batch_ranks[i * 2]) + _params.sigma_2 * _rgen_gauss.rand() * (_archive.col(_batch_ranks[i * 2 + 1]) - _archive.col(_batch_ranks[i * 2]));
 
                 // Gaussian mutation
                 for (unsigned int i = 0; i < _params.pop_size; i++)

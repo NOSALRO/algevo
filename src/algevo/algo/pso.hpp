@@ -86,6 +86,7 @@ namespace algevo {
 
                 x_t best;
                 Scalar best_value;
+                Scalar mean_value;
             };
 
             ParticleSwarmOptimization(const Params& params) : _params(params), _rgen(0., 1., params.seed)
@@ -212,6 +213,8 @@ namespace algevo {
                     }
                 });
 
+                _log.mean_value = 0.;
+
                 // Update neighborhood and global bests
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
                     if (_fit_best_local[i] > _fit_best) {
@@ -223,7 +226,11 @@ namespace algevo {
                         _fit_best_neighbor[_neighborhood_ids[i]] = _fit_best_local[i];
                         _best_neighbor.col(_neighborhood_ids[i]) = _best_local.col(i); // TO-DO: Maybe tag to avoid copies?
                     }
+
+                    _log.mean_value += _fit_best_local[i];
                 }
+
+                _log.mean_value /= static_cast<Scalar>(_params.pop_size);
             }
 
             void _update_particle(unsigned int i)
