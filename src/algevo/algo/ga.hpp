@@ -38,8 +38,8 @@
 
 #include <Eigen/Core>
 
-#include <array>
 #include <limits>
+#include <vector>
 
 #include <algevo/tools/parallel.hpp>
 #include <algevo/tools/random.hpp>
@@ -81,12 +81,13 @@ namespace algevo {
                 Scalar best_value;
             };
 
-            GeneticAlgorithm(const Params& params) : _params(params), _num_elites(std::min(params.num_elites, params.pop_size / 2)), _rgen(0., 1., params.seed)
+            GeneticAlgorithm(const Params& params, const Fit& init_fit = {}) : _params(params), _num_elites(std::min(params.num_elites, params.pop_size / 2)), _rgen(0., 1., params.seed)
             {
                 assert(_params.pop_size >= 2 && "Population size needs to be bigger than 1!");
                 assert(_params.dim > 0 && "Dimensions not set!");
                 assert(_params.min_value.size() == _params.dim && _params.max_value.size() == _params.dim && "Min/max values dimensions should be the same as the problem dimensions!");
-                _allocate_data();
+
+                _allocate_data(init_fit);
 
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
                     for (unsigned int j = 0; j < _params.dim; j++) {
@@ -163,13 +164,13 @@ namespace algevo {
             rgen_scalar_t _rgen;
             rgen_scalar_gauss_t _rgen_gauss = rgen_scalar_gauss_t(static_cast<Scalar>(0.), static_cast<Scalar>(1.));
 
-            void _allocate_data()
+            void _allocate_data(const Fit& init_fit = {})
             {
                 _population = population_t(_params.dim, _params.pop_size);
                 _population_fit = x_t(_params.pop_size);
                 _best = x_t(_params.dim);
 
-                _fit_evals.resize(_params.pop_size);
+                _fit_evals.resize(_params.pop_size, init_fit);
 
                 _best_idxs.resize(_params.pop_size);
             }

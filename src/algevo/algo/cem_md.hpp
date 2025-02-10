@@ -103,7 +103,7 @@ namespace algevo {
                 Scalar best_value;
             };
 
-            CrossEntropyMethodMixed(const Params& params) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites)), _elites_reuse_size(std::max(0u, std::min(_params.num_elites, static_cast<unsigned int>(_params.num_elites * _params.fraction_elites_reused)))), _rgen(0., 1., params.seed)
+            CrossEntropyMethodMixed(const Params& params, const Fit& init_fit = {}) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites)), _elites_reuse_size(std::max(0u, std::min(_params.num_elites, static_cast<unsigned int>(_params.num_elites * _params.fraction_elites_reused)))), _rgen(0., 1., params.seed)
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim_discrete > 0 && _params.dim_continuous > 0 && "Dimensions not set!");
@@ -114,7 +114,7 @@ namespace algevo {
 
                 _population_fit = xc_t::Constant(_params.pop_size, -std::numeric_limits<Scalar>::max());
 
-                _fit_evals.resize(_params.pop_size);
+                _fit_evals.resize(_params.pop_size, init_fit);
                 _fit_best = -std::numeric_limits<Scalar>::max();
             }
 

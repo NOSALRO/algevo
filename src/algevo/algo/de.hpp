@@ -79,12 +79,13 @@ namespace algevo {
                 Scalar best_value;
             };
 
-            DifferentialEvolution(const Params& params) : _params(params), _rgen(0., 1., params.seed)
+            DifferentialEvolution(const Params& params, const Fit& init_fit = {}) : _params(params), _rgen(0., 1., params.seed)
             {
                 assert(_params.pop_size >= 3 && "Population size needs to be bigger than 2!");
                 assert(_params.dim > 0 && "Dimensions not set!");
                 assert(_params.min_value.size() == _params.dim && _params.max_value.size() == _params.dim && "Min/max values dimensions should be the same as the problem dimensions!");
-                _allocate_data();
+
+                _allocate_data(init_fit);
 
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
                     for (unsigned int j = 0; j < _params.dim; j++) {
@@ -151,13 +152,13 @@ namespace algevo {
             // Random numbers
             rgen_scalar_t _rgen;
 
-            void _allocate_data()
+            void _allocate_data(const Fit& init_fit = {})
             {
                 _population = population_t(_params.dim, _params.pop_size);
                 _population_fit = x_t(_params.pop_size);
                 _best = x_t(_params.dim);
 
-                _fit_evals.resize(_params.pop_size);
+                _fit_evals.resize(_params.pop_size, init_fit);
             }
 
             void _evaluate_population()

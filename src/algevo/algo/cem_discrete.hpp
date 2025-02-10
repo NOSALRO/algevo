@@ -79,13 +79,13 @@ namespace algevo {
                 Scalar best_value;
             };
 
-            CrossEntropyMethodDiscrete(const Params& params) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites))
+            CrossEntropyMethodDiscrete(const Params& params, const Fit& init_fit = {}) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites))
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim > 0 && "Dimensions not set!");
                 assert(_params.num_elites > 0 && _params.num_elites <= _params.pop_size && "Number of elites is wrongly set!");
 
-                _allocate_data();
+                _allocate_data(init_fit);
 
                 _fit_best = -std::numeric_limits<Scalar>::max();
             }
@@ -145,7 +145,7 @@ namespace algevo {
             // Evaluators
             fit_eval_t _fit_evals;
 
-            void _allocate_data()
+            void _allocate_data(const Fit& init_fit = {})
             {
                 _population = population_t(_params.dim, _params.pop_size);
                 _elites = population_t(_params.dim, _params.num_elites);
@@ -155,7 +155,7 @@ namespace algevo {
 
                 _probs = _params.init_probs;
 
-                _fit_evals.resize(_params.pop_size);
+                _fit_evals.resize(_params.pop_size, init_fit);
             }
 
             void _generate_population()

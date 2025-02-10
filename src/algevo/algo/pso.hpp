@@ -90,7 +90,7 @@ namespace algevo {
                 Scalar mean_value;
             };
 
-            ParticleSwarmOptimization(const Params& params) : _params(params), _rgen(0., 1., params.seed)
+            ParticleSwarmOptimization(const Params& params, const Fit& init_fit = {}) : _params(params), _rgen(0., 1., params.seed)
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim > 0 && "Dimensions not set!");
@@ -101,7 +101,7 @@ namespace algevo {
 
                 _num_neighborhoods = std::floor(_params.pop_size / static_cast<Scalar>(_params.num_neighbors));
 
-                _allocate_data();
+                _allocate_data(init_fit);
 
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
                     for (unsigned int j = 0; j < _params.dim; j++) {
@@ -185,7 +185,7 @@ namespace algevo {
             // Random numbers
             rgen_scalar_t _rgen;
 
-            void _allocate_data()
+            void _allocate_data(const Fit& init_fit = {})
             {
                 _population = population_t(_params.dim, _params.pop_size);
                 _velocities = population_t(_params.dim, _params.pop_size);
@@ -199,7 +199,7 @@ namespace algevo {
 
                 _best = x_t::Constant(_params.dim, -std::numeric_limits<Scalar>::max());
 
-                _fit_evals.resize(_params.pop_size);
+                _fit_evals.resize(_params.pop_size, init_fit);
                 _neighborhood_ids.resize(_params.pop_size, -1);
             }
 

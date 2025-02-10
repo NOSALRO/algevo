@@ -116,7 +116,7 @@ namespace algevo {
                 std::vector<unsigned int> valid_individuals;
             };
 
-            MapElites(const Params& params) : _params(params), _rgen(0., 1., params.seed), _rgen_ranks(0, params.num_cells - 1, params.seed)
+            MapElites(const Params& params, const Fit& init_fit = {}) : _params(params), _rgen(0., 1., params.seed), _rgen_ranks(0, params.num_cells - 1, params.seed)
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim > 0 && "Dimensions not set!");
@@ -126,7 +126,7 @@ namespace algevo {
                 assert(_params.min_feat.size() == _params.dim_features && _params.max_feat.size() == _params.dim_features && "Min/max feature dimensions should be the same as the feature dimensions!");
                 assert((_params.centroids.size() == 0 || (_params.centroids.rows() == _params.dim_features && _params.centroids.cols() == _params.num_cells)) && "Centroids dimensions not set correctly!");
 
-                _allocate_data();
+                _allocate_data(init_fit);
 
                 // Initialize random archive
                 for (unsigned int i = 0; i < _params.num_cells; i++) {
@@ -407,7 +407,7 @@ namespace algevo {
             tools::rgen_int_t _rgen_ranks;
             rgen_scalar_gauss_t _rgen_gauss = rgen_scalar_gauss_t(static_cast<Scalar>(0.), static_cast<Scalar>(1.));
 
-            void _allocate_data()
+            void _allocate_data(const Fit& init_fit = {})
             {
                 _archive = mat_t(_params.dim, _params.num_cells);
                 _archive_features = mat_t::Constant(_params.dim_features, _params.num_cells, -std::numeric_limits<Scalar>::max());
@@ -422,7 +422,7 @@ namespace algevo {
                 _batch_ranks.resize(_params.pop_size * 2);
                 _new_rank.resize(_params.pop_size);
 
-                _fit_evals.resize(_params.pop_size);
+                _fit_evals.resize(_params.pop_size, init_fit);
             }
         };
     } // namespace algo

@@ -94,14 +94,14 @@ namespace algevo {
                 Scalar best_value;
             };
 
-            CrossEntropyMethod(const Params& params) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites)), _elites_reuse_size(std::max(0u, std::min(_params.num_elites, static_cast<unsigned int>(_params.num_elites * _params.fraction_elites_reused)))), _rgen(0., 1., params.seed), _colored_rgen(params.seed)
+            CrossEntropyMethod(const Params& params, const Fit& init_fit = {}) : _params(params), _update_coeff(static_cast<Scalar>(1.) / static_cast<Scalar>(_params.num_elites)), _elites_reuse_size(std::max(0u, std::min(_params.num_elites, static_cast<unsigned int>(_params.num_elites * _params.fraction_elites_reused)))), _rgen(0., 1., params.seed), _colored_rgen(params.seed)
             {
                 assert(_params.pop_size > 0 && "Population size needs to be bigger than zero!");
                 assert(_params.dim > 0 && "Dimensions not set!");
                 assert(_params.num_elites > 0 && _params.num_elites <= _params.pop_size && "Number of elites is wrongly set!");
                 assert(_params.min_value.size() == _params.dim && _params.max_value.size() == _params.dim && "Min/max values dimensions should be the same as the problem dimensions!");
 
-                _allocate_data();
+                _allocate_data(init_fit);
 
                 _fit_best = -std::numeric_limits<Scalar>::max();
             }
@@ -173,7 +173,7 @@ namespace algevo {
             rgen_scalar_gauss_t _rgen;
             colored_noise_t _colored_rgen;
 
-            void _allocate_data()
+            void _allocate_data(const Fit& init_fit = {})
             {
                 _population = population_t(_params.dim, _params.pop_size);
                 _elites = population_t(_params.dim, _params.num_elites);
@@ -184,7 +184,7 @@ namespace algevo {
                 _mu = _params.init_mu;
                 _std_devs = _params.init_std;
 
-                _fit_evals.resize(_params.pop_size);
+                _fit_evals.resize(_params.pop_size, init_fit);
             }
 
             void _generate_population(bool inject_mean_to_population)
