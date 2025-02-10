@@ -87,7 +87,6 @@ namespace algevo {
 
                 x_t best;
                 Scalar best_value;
-                Scalar mean_value;
             };
 
             ParticleSwarmOptimization(const Params& params, const Fit& init_fit = {}) : _params(params), _rgen(0., 1., params.seed)
@@ -146,6 +145,8 @@ namespace algevo {
 
             x_t average() const { return _population.rowwise().mean(); }
 
+            const x_t& population_fit() const { return _population_fit; }
+
             const population_t& velocities() const { return _velocities; }
             population_t& velocities() { return _velocities; }
 
@@ -171,6 +172,9 @@ namespace algevo {
             x_t _fit_best_neighbor;
             population_t _best_neighbor;
 
+            // Book-keeping
+            x_t _population_fit;
+
             // Best ever
             x_t _best;
             Scalar _fit_best;
@@ -191,6 +195,7 @@ namespace algevo {
                 _velocities = population_t(_params.dim, _params.pop_size);
 
                 _fit_best_local = x_t::Constant(_params.pop_size, -std::numeric_limits<Scalar>::max());
+                _population_fit = x_t::Constant(_params.pop_size, -std::numeric_limits<Scalar>::max());
 
                 _best_local = population_t(_params.dim, _params.pop_size);
 
@@ -208,13 +213,13 @@ namespace algevo {
                 // Evaluate individuals
                 tools::parallel_loop(0, _params.pop_size, [this](size_t i) {
                     Scalar f = _fit_evals[i].eval(_population.col(i));
+                    _population_fit[i] = f;
+
                     if (f > _fit_best_local[i]) {
                         _fit_best_local[i] = f;
                         _best_local.col(i) = _population.col(i);
                     }
                 });
-
-                _log.mean_value = 0.;
 
                 // Update neighborhood and global bests
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
@@ -227,11 +232,7 @@ namespace algevo {
                         _fit_best_neighbor[_neighborhood_ids[i]] = _fit_best_local[i];
                         _best_neighbor.col(_neighborhood_ids[i]) = _best_local.col(i); // TO-DO: Maybe tag to avoid copies?
                     }
-
-                    _log.mean_value += _fit_best_local[i];
                 }
-
-                _log.mean_value /= static_cast<Scalar>(_params.pop_size);
             }
 
             void _update_particle(unsigned int i)
