@@ -104,14 +104,6 @@ namespace algevo {
                 // Evaluate population
                 _evaluate_population(force_reeval);
 
-                // Update global best
-                for (unsigned int i = 0; i < _params.pop_size; i++) {
-                    if (_population_fit(i) > _fit_best) {
-                        _fit_best = _population_fit(i);
-                        _best = _population.col(i); // TO-DO: Maybe tag to avoid copies?
-                    }
-                }
-
                 // Sort the population according to fitness
                 _sort_population();
 
@@ -201,6 +193,10 @@ namespace algevo {
 
                 // sort indexes based on comparing fitness
                 std::sort(_best_idxs.begin(), _best_idxs.end(), [this](size_t i1, size_t i2) { return _population_fit(i1) > _population_fit(i2); });
+
+                _fit_best = _population_fit[_best_idxs[0]];
+
+                _best = _population.col(_best_idxs[0]);
             }
 
             void _genetic_operators()
