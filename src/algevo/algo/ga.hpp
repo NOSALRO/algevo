@@ -99,10 +99,10 @@ namespace algevo {
                 _fit_best = -std::numeric_limits<Scalar>::max();
             }
 
-            IterationLog step()
+            IterationLog step(bool force_reeval = false)
             {
                 // Evaluate population
-                _evaluate_population();
+                _evaluate_population(force_reeval);
 
                 // Update global best
                 for (unsigned int i = 0; i < _params.pop_size; i++) {
@@ -120,7 +120,10 @@ namespace algevo {
 
                 // Update iteration log
                 _log.iterations++;
-                _log.func_evals += _params.pop_size;
+                if (force_reeval || _log.iterations == 1)
+                    _log.func_evals += _params.pop_size;
+                else
+                    _log.func_evals += _num_elites;
                 _log.best = _best;
                 _log.best_value = _fit_best;
 
@@ -175,12 +178,20 @@ namespace algevo {
                 _best_idxs.resize(_params.pop_size);
             }
 
-            void _evaluate_population()
+            void _evaluate_population(bool force_reeval = false)
             {
-                // Evaluate individuals
-                tools::parallel_loop(0, _params.pop_size, [this](size_t i) {
-                    _population_fit(i) = _fit_evals[i].eval(_population.col(i));
-                });
+                if (_log.iterations == 0 || force_reeval) {
+                    // Evaluate individuals
+                    tools::parallel_loop(0, _params.pop_size, [this](size_t i) {
+                        _population_fit(i) = _fit_evals[i].eval(_population.col(i));
+                    });
+                }
+                else {
+                    // Evaluate only the new individuals
+                    tools::parallel_loop(0, _num_elites, [this](size_t i) {
+                        _population_fit(_best_idxs[_params.pop_size - 1 - i]) = _fit_evals[_best_idxs[_params.pop_size - 1 - i]].eval(_population.col(_best_idxs[_params.pop_size - 1 - i]));
+                    });
+                }
             }
 
             void _sort_population()
