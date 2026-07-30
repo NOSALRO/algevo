@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 #|
-#|    Copyright (c) 2022-2025 Computational Intelligence Lab, University of Patras, Greece
-#|    Copyright (c) 2023-2025 Laboratory of Automation and Robotics, University of Patras, Greece
-#|    Copyright (c) 2022-2025 Konstantinos Chatzilygeroudis
+#|    Copyright (c) 2022-2026 Computational Intelligence Lab, University of Patras, Greece
+#|    Copyright (c) 2023-2026 Laboratory of Automation and Robotics, University of Patras, Greece
+#|    Copyright (c) 2022-2026 Konstantinos Chatzilygeroudis
 #|    Authors:  Konstantinos Chatzilygeroudis
 #|    email:    costashatz@gmail.com
 #|    website:  https://nosalro.github.io/
@@ -38,9 +38,9 @@
 import fnmatch,re
 import os, shutil, sys
 
-license = '''Copyright (c) 2022-2025 Computational Intelligence Lab, University of Patras, Greece
-Copyright (c) 2023-2025 Laboratory of Automation and Robotics, University of Patras, Greece
-Copyright (c) 2022-2025 Konstantinos Chatzilygeroudis
+license = '''Copyright (c) 2022-2026 Computational Intelligence Lab, University of Patras, Greece
+Copyright (c) 2023-2026 Laboratory of Automation and Robotics, University of Patras, Greece
+Copyright (c) 2022-2026 Konstantinos Chatzilygeroudis
 Authors:  Konstantinos Chatzilygeroudis
 email:    costashatz@gmail.com
 website:  https://nosalro.github.io/
