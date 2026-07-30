@@ -74,7 +74,7 @@ This work was conducted within the [Computational Intelligence Lab](http://cilab
 <p align="center">
 <img src="https://nosalro.github.io/images/logo_cilab.jpg" alt="logo_cilab" width="50%"/><br/>
 <img src="https://lar.upatras.gr/img/logo.png" alt="logo_lar" width="25%"/>
-<img src="https://www.upatras.gr/wp-content/uploads/up_2017_logo_en.png" alt="logo_cilab" width="50%"/>
+<img src="https://www.upatras.gr/wp-content/uploads/up_2017_logo_en.png" alt="logo_upatras" width="50%"/>
 </p>
 
 ## License
