@@ -33,7 +33,7 @@ There are numerous examples under `src/examples`. If the compilation procedure h
 
 ## Citing AlgEvo
 
-If you use `AlgEvo` in a scientific publication, please use the following citation ([pdf](http://costashatz.github.io/files/LION17.pdf)):
+If you use `AlgEvo` in a scientific publication, please use the following citations ([pdf](http://costashatz.github.io/files/LION17.pdf), [pdf](https://arxiv.org/pdf/2607.16876):
 
 ```bibtex
 @inproceedings{chatzilygeroudis2023lion,
@@ -44,7 +44,18 @@ If you use `AlgEvo` in a scientific publication, please use the following citati
 }
 ```
 
-The paper descibes the **UPSO-QP** approach.
+This paper descibes the **UPSO-QP** approach.
+
+```bibtex
+@article{printzios2026hybrid,
+  title={Hybrid Augmented Lagrangian Method for General Constrained Optimization via Evolutionary Algorithms},
+  author={Printzios, Lampros and Chatzilygeroudis, Konstantinos},
+  journal={arXiv preprint arXiv:2607.16876},
+  year={2026}
+}
+```
+
+This paper describes the Hybrid Augmented Lagrangian Method (HALM), more information [here](https://github.com/NOSALRO/halm).
 
 ## Acknowledgments
 
@@ -58,7 +69,7 @@ This work was supported by the [Hellenic Foundation for Research and Innovation]
 <img src="https://nosalro.github.io/images/logo_elidek.png" alt="logo_elidek" width="50%"/>
 </center> -->
 
-This work was conducted within the [Computational Intelligence Lab](http://cilab.math.upatras.gr/) (CILab), Department of Mathematics, University of Patras, Greece.
+This work was conducted within the [Computational Intelligence Lab](http://cilab.math.upatras.gr/) (CILab), Department of Mathematics, and the [Laboratory of Automation and Robotics](https://lar.upatras.gr/) (LAR), Department of Electrical & Computer Engineering, University of Patras, Greece.
 
 <p align="center">
 <img src="https://nosalro.github.io/images/logo_cilab.jpg" alt="logo_cilab" width="50%"/>
