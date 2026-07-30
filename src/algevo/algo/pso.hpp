@@ -253,11 +253,11 @@ namespace algevo {
                 Scalar r1p = rgen.rand();
                 Scalar r2p = rgen.rand();
 
-                if (u > zero && one_minus_u > zero) // UPSO
+                if (u > zero && one_minus_u > zero) // UPSO (0 < u < 1)
                     _velocities.col(i) = one_minus_u * chi * (_velocities.col(i) + c1 * r1 * (_best_local.col(i) - _population.col(i)) + c2 * r2 * (_best - _population.col(i))).array() + u * chi * (_velocities.col(i) + c1 * r1p * (_best_local.col(i) - _population.col(i)) + c2 * r2p * (_best_neighbor.col(_neighborhood_ids[i]) - _population.col(i))).array();
-                else if (u > zero) // GPSO
+                else if (u == zero) // LPSO (u == 0)
                     _velocities.col(i) = chi * (_velocities.col(i) + c1 * r1p * (_best_local.col(i) - _population.col(i)) + c2 * r2p * (_best_neighbor.col(_neighborhood_ids[i]) - _population.col(i)));
-                else // if (one_minus_u > zero) // LPSO
+                else // GPSO (u == 1)
                     _velocities.col(i) = chi * (_velocities.col(i) + c1 * r1 * (_best_local.col(i) - _population.col(i)) + c2 * r2 * (_best - _population.col(i)));
 
                 // Add noise if wanted, helps to get away from local minima
