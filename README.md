@@ -55,14 +55,14 @@ This paper descibes the **UPSO-QP** approach.
 }
 ```
 
-This paper describes the Hybrid Augmented Lagrangian Method (HALM), more information [here](https://github.com/NOSALRO/halm).
+This paper describes the **Hybrid Augmented Lagrangian Method (HALM)**, more information [here](https://github.com/NOSALRO/halm).
 
 ## Acknowledgments
 
 This work was supported by the [Hellenic Foundation for Research and Innovation](https://www.elidek.gr/en/homepage/) (H.F.R.I.) under the "3rd Call for H.F.R.I. Research Projects to support Post-Doctoral Researchers" (Project Acronym: NOSALRO, Project Number: 7541).
 
 <p align="center">
-<img src="https://www.elidek.gr/wp-content/themes/elidek/images/elidek_logo_en.png" alt="logo_elidek"/>
+<img src="https://www.elidek.gr/wp-content/uploads/2024/11/ELIDEK_Logo__Vector_ENG1-150x49.webp" alt="logo_elidek"/>
 <p/>
 
 <!-- <center>
@@ -73,6 +73,7 @@ This work was conducted within the [Computational Intelligence Lab](http://cilab
 
 <p align="center">
 <img src="https://nosalro.github.io/images/logo_cilab.jpg" alt="logo_cilab" width="50%"/>
+<img src="https://lar.upatras.gr/img/logo.png" alt="logo_lar" width="25%"/>
 <img src="https://www.upatras.gr/wp-content/uploads/up_2017_logo_en.png" alt="logo_cilab" width="50%"/>
 </p>
 
